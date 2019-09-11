@@ -1,0 +1,100 @@
+1 操作手册
+  https://yelog.org/
+  3-hexo使用说明
+
+2 文章分类
+
+---
+title: gperftools使用指南
+date: 2019-09-10 22:55:47
+categories:
+- 工具
+- 性能分析
+tags:
+- gperftools
+---
+
+主题会自动根据categories分类
+
+3  多级分类
+
+参见3-hexo/_config.yml说明
+
+# 文章分类设置
+category:
+  num: true # 分类显示文章数
+  sub: true # 开启多级分类
+  width:
+    lg: 120 # 1468px<屏幕宽度 左侧分类宽度
+    md: 100 # 1024px<屏幕宽度<=1468px 左侧分类宽度
+    sm: 100 # 426px<屏幕宽度<=1024px 左侧分类宽度（ipad）
+# 多级分类说明：
+# 比如在文章中设置多个菜单，则默认为多级菜单，即：工具>hexo
+# categories:
+#   - 工具
+#   - hexo
+
+4 开启字数统计
+1) hexo根目录安装插件：npm i hexo-wordcount --save
+2) 修改主题_config.yml：word_count: true
+
+5 开启评论
+修改主题_config.yml
+comment:
+  on: true
+  type: gitalk  # 评论系统：gitalk、disqus、gentie、gitment,注意：使用时，在下方对应位置进行配置
+  comment_count: true  # 文章标题下方显示评论数
+  preload_comment: false  # 预加载评论区
+  
+gitalk:
+  githubID: melonshell
+  repo: melonshell.github.io
+  ClientID: e97d9b9b791221194492
+  ClientSecret: c3930f83c344398e78fe43dff9bd0af7ce3024ab
+  adminUser: melonshell
+  distractionFreeMode: true
+  language: zh-CN
+  perPage: 10
+# gitalk：利用github issue制作的第三方聊天插件
+# https://github.com/gitalk/gitalk
+# 参数介绍：
+# githubID: github用户名
+# repo: 使用哪个仓库的issue
+# ClientID 和 ClientSecret 创建 OAuth application 就会生成：https://github.com/settings/applications/new
+# adminUser: 必须为上面仓库的合作者（有写入权限），使用自己的 github 用户名即可
+# distractionFreeMode: 全屏遮罩效果
+# language: 语言：支持：en / zh-CN / zh-TW 三种
+# perPage: 每次加载的数据大小，默认10，最大100
+
+6 github OAuth application:
+  
+头像 --> Settings --> Developer settings --> OAuth Apps --> 点击右边melonshell
+
+7 google搜索引擎
+
+7.1 验证
+验证是否被收录，打开google，搜索栏输入：
+   site:https://melonshell.github.io/
+   
+HTML tag验证：
+3-hexo\layout\_partial\header.ejs      加入google给出验证头部
+
+7.2 添加sitemap
+安装扩展
+npm install hexo-generator-sitemap --save
+
+打开Hexo根目录下的_config.xml，在最后添加:
+# 自动生成sitemap
+sitemap:
+path: sitemap.xml
+
+在Add a new sitemap中添加sitemap.xml
+
+8 语法高亮
+关闭hexo根目录_config.yml的高亮，
+highlight:
+  enable: false
+打开主题的高亮
+
+
+

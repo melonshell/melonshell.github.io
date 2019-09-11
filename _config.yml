@@ -7,13 +7,13 @@ title: Hexo
 subtitle:
 description:
 keywords:
-author: John Doe
+author: melonshell
 language: en
 timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://yoursite.com
+url: http://melonshell.github.io
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -39,7 +39,7 @@ post_asset_folder: false
 relative_link: false
 future: true
 highlight:
-  enable: true
+  enable: false
   line_number: true
   auto_detect: false
   tab_replace:
@@ -81,3 +81,7 @@ deploy:
   type: git
   repository: https://github.com/melonshell/melonshell.github.io
   branch: master
+
+# 自动生成sitemap
+sitemap:
+path: sitemap.xml
