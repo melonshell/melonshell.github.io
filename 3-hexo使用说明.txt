@@ -96,5 +96,12 @@ highlight:
   enable: false
 打开主题的高亮
 
+9 代码块字体设置
+3-hexo\source\css\_partial\post.styl
 
+234行:
+pre > code
+    font-size 15px
+    border-radius 3px
+    font-family Consolas
 
