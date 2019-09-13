@@ -128,7 +128,7 @@ tags:
   静态库和动态库同名时，gcc/g++优先链接动态库；  
   
   ldd命令查看test依赖的动态库：  
-  env LD_LIBRARY_PATH=./gperftools/libs/:./libunwind/libs/ ldd test  
+  env LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./gperftools/libs/:./libunwind/libs/ ldd test  
   
   <font color=BlueViolet>**如何Profile?**</font>  
   <font color=BlueViolet>**方法1：定义环境变量CPUPROFILE(profile导出文件名称)**</font>  
