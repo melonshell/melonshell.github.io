@@ -1,12 +1,13 @@
 ---
-title: gperftools使用指南
+title: gperftools之CPU Profile
 date: 2019-09-10 22:55:47
 categories:
 - 工具
-- 性能分析
+- gperftools
 tags:
 - gperftools
-- 指南
+- 性能
+- CPU profile
 ---
 
 # 编译
