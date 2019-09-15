@@ -10,7 +10,7 @@ tags:
 - heap profile
 ---
 
-有如下代码：  
+源文件leak.cc：  
 ```C
 #include <stdlib.h>
 int main() {
@@ -26,16 +26,16 @@ heap profiler需要-ltcmalloc：
 g++ -g leak.cc -o leak -L./gperftools/libs -ltcmalloc -Wl,-rpath=/root/gperftools/gperftools/libs
 **加上-g参数可以打印出行号等更多的调试信息**  
 
-定义环境变量HEAPCHECK：  
+定义环境变量HEAPCHECK，执行：  
 env HEAPCHECK=normal ./leak  
-显示内存泄露情况，同时**提示pprof**命令；  
+输出结果会显示内存泄露情况，同时**提示pprof**命令；  
 
-定义环境变量HEAPPROFILE(heap profile导出文件名称)：  
+定义环境变量HEAPPROFILE(heap profile导出文件名称)，执行：  
 env HEAPPROFILE=d.prof ./leak  
-将内存信息写入d.prof.0001.heap文件；  
+会将内存信息写入d.prof.0001.heap文件；  
 
 env HEAPPROFILE=d.prof HEAPCHECK=normal ./leak  
-显示内存泄露情况，将内存信息写入d.prof.0001.heap文件；  
+输出结果会显示内存泄露情况，且将内存信息写入d.prof.0001.heap文件；  
 
 ### 2 运行时LD_PRELOAD加载
 编译:  
@@ -57,7 +57,7 @@ pprof ./leak "/tmp/leak.15700._main_-end.heap" --inuse_objects --lines --heapche
 pprof ./leak "n.prof.0001.heap" --inuse_objects --lines --heapcheck  --edgefraction=1e-10 --nodefraction=1e-10 --pdf > n.pdf  
 
 结果如下：  
-<div style="height: 80%; width: 80%">![gperftools分析结果](/pic/gperftools2201909151028.png)</div>  
+<div style="height: 80%; width: 80%">![gperftools内存分析结果](/pic/gperftools2201909151028.png)</div>  
 
 
 

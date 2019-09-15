@@ -156,7 +156,7 @@ tags:
   pprof --text ./test my.prof > output.txt  
   pprof --pdf ./test my.prof > output.pdf  
   生成结果格式如下：  
-  <div style="height: 80%; width: 80%">![gperftools分析结果](/pic/gperftools201909130015.png)</div>
+  <div style="height: 80%; width: 80%">![gperftoolsCPU分析结果](/pic/gperftools201909130015.png)</div>
 
   **3 结果分析**  
   图形风格的结果有结点和有向边组成，每个结点代表一个函数，结点数据格式：  
