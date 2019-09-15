@@ -105,3 +105,6 @@ pre > code
     border-radius 3px
     font-family Consolas
 
+10 markdown中英文双引号在html中变中文双引号，连续两个减号(-)在html中被合并为一个减号的问题？
+node_modules\hexo-renderer-marked\index.js
+置  smartypants: false

@@ -166,6 +166,3 @@ tags:
   of cumulative (percentage)  
   Profile通过采样实现，默认每秒采样100次，因此输出结果中的时间单位为10ms，例如func2执行本地指令耗时67个单位，约670ms。local是直接执行函数内的指令(包括内联函数)所消耗时间，cumulative是callees和local时间之和，如果cumulative时间和local时间相等，则cumulative不显示。
   
-  
-
-  
