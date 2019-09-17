@@ -39,11 +39,11 @@ $GOPATH有三个子目录：
 * bin存放go install生成的可执行文件(为了方便，可以把此目录加入到$PATH变量中，如果有多个gopath，那么使用${GOPATH//://bin:}/bin添加所有的bin目录）
 
 # 运行
-1. 检查go是否安装成功：  
+1 检查go是否安装成功：  
 go env  
 go env命令用于查看go环境的安装配置变量。  
 
-2. 测试代码 
+2 测试代码 
 test.go 
 ```go
 package main
