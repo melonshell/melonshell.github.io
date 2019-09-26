@@ -111,8 +111,9 @@ ROUTINE ======================== havlakloopfinder.DFS in /root/go/src/havlakloop
          .          .    172:// FindLoops
          .          .    173://
          .          .    174:// Find loops and build loop forest using Havlak's algorithm, which
+  
 
-  <div style="height: 80%; width: 80%">![CPU Profile结果](/pic/go3201909262046.jpg)</div>  
+  <div style="height: 60%; width: 60%">![CPU Profile结果](/pic/go3201909262046.png)</div>  
 分析Profile结果发现，mapaccess1_fast64占用CPU采用时间最多，
 
 
