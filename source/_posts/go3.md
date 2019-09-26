@@ -81,8 +81,7 @@ Showing top 5 nodes out of 83
 **(pprof) web**  
 也可以生成pdf格式的Profile：  
 **(pprof) pdf**  
-
-也可以不用交互式：  
+不用交互式：  
 **go tool pprof -pdf ./havlak1 ./havlak1.prof > cpu.pdf**  
 
 另外list FuncName可以显示函数名以及每行代码的采样分析：  
@@ -112,8 +111,9 @@ ROUTINE ======================== havlakloopfinder.DFS in /root/go/src/havlakloop
          .          .    173://
          .          .    174:// Find loops and build loop forest using Havlak's algorithm, which
   
-
+图形化Profile结果如下图：  
   <div style="height: 60%; width: 60%">![CPU Profile结果](/pic/go3201909262046.png)</div>  
+
 分析Profile结果发现，mapaccess1_fast64占用CPU采用时间最多，
 
 
