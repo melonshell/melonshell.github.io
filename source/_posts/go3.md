@@ -218,8 +218,9 @@ Showing top 5 nodes out of 21
          .          .    245:		}
          .          .    246:	}
 ```
+这里只需要简单的set，但是却用了map存储，可以用slice优化。  
 
-查看**CPU profile**可以看到仍然是GC占用了大量时间，
+再次查看**CPU profile**可以看到GC占用了大量时间，
 ./havlak3 -cpuprofile=havlak3.prof
 go tool pprof ./havlak3 ./havlak3.prof 
 ```
@@ -249,7 +250,7 @@ Showing top 5 nodes out of 82
 **go tool pprof --nodefraction=0.1 ./havlak3 ./havlak3.prof**  
 **(pprof) pdf mallocgc**  
   <div style="height: 80%; width: 80%">![CPU Profile之mallocgc 2](/pic/go3201909281408.png)</div> 
-沿着粗线箭头可以看到，FindLoops是导致GC的主要原因，list FindLoops可以发现FindLoops调用会分配大量结构体，可以用一个全局结构体优化（工程不推荐，也非线程安全）。  
+沿着粗线箭头可以看到，FindLoops是导致GC的主要原因，list FindLoops可以发现每次FindLoops调用会分配大量结构体，可以用一个全局结构体优化（工程不推荐，也非线程安全）。  
 
 ## 2.3 blockprofile
 
@@ -430,10 +431,7 @@ func main() {
 
 以上几种Profile可在http://localhost:6060/debug/pprof/中看到，除此之外go pprof的CMD还包括：  
 * cmdline：获取程序的命令行启动参数
-* profile：获取指定时间内（从请求开始）的cpuprofile，倒计时结束后自动返回。  参数：
-* 
-* 
-* s，默认值30，cpuprofile每秒钟采样100次，收集当前运行的goroutine堆栈信息
+* profile：获取指定时间内（从请求开始）的cpuprofile，倒计时结束后自动返回。 参数：seconds，默认值30秒，CPU profile每秒钟采样100次，收集当前运行的goroutine堆栈信息
 * symbol：用于将地址列表转换为函数名列表，地址通过'+'分隔，如URL/debug/pprof?0x18d067f+0x17933e7
 * trace：对应用程序进行执行追踪，参数：seconds，默认值1s
 
