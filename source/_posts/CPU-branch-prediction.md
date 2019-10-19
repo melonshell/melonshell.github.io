@@ -104,8 +104,8 @@ branch =   T,   T,   N,   T,   T,   T,   T,  N,   T,   N,   N,   T,   T,   T,   
 int t = (data[c] - 128) >> 31;
 sum += (~t & data[c]);
 ```
-当data[c] < 128，t为-1，~t为0；
-当data[c] >= 128，t为0，~t为-1；
+当data[c] < 128，t为-1，~t为0；  
+当data[c] >= 128，t为0，~t为-1；  
 
 若想避免移位操作，可以使用如下方式：  
 ```
