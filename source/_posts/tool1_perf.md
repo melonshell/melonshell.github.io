@@ -1245,3 +1245,4 @@ FlameGraph/stackcollapse-perf.pl out.perf > out.folded
 FlameGraph/flamegraph.pl out.folded > out.svg
 ```
 生成火焰图可以指定参数，–width指定图片宽度，–height指定每一个调用栈的高度，生成的火焰图，宽度越大就表示CPU耗时越多。  
+  ![perf timechart](/pic/tool1-perf-14.png)

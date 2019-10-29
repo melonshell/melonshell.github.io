@@ -2,7 +2,7 @@
 title: CPU分支预测
 date: 2019-10-10 23:40:47
 categories:
-- 性能相关
+- 性能分析
 tags:
 - cpu
 - 分支预测
