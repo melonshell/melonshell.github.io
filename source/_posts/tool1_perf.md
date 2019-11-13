@@ -3,9 +3,9 @@ title: perf性能分析
 date: 2019-10-09 07:54:19
 categories:
 - 工具
-- Perf工具
+- 性能
 tags:
-- go
+- perf
 ---
 
 # 1 介绍
@@ -561,12 +561,7 @@ Error, output file perf.data exists, use -A to append or -f to overwrite.
 
 调度器的好坏直接影响一个系统的整体运行效率，Perf sched尝试给出调度器的评测报告，它有5个子命令：  
 * perf sched record            # low-overhead recording of arbitrary workloads
-* perf sched latency           # 
-* 
-* 
-* 
-* 
-* put per task latency metrics
+* perf sched latency           # output per task latency metrics
 * perf sched map               # show summary/map of context-switching
 * perf sched trace             # output finegrained trace
 * perf sched replay            # replay a captured workload using simlated threads

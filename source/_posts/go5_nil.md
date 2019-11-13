@@ -266,7 +266,7 @@ func merge(out chan<- int, a, b <-chan int) {
   close(out)
 }
 ```
-在知道channel关闭后，将channel的值设置为nil，这就相当于将select case子句停用了，**因为nil的channel是永远阻塞的**。  
+在channel关闭后，将channel的值设置为nil，这就相当于将select case子句停用了，**因为nil的channel是永远阻塞的**。  
 
 ## 2.5 interface
 interface{}类型**的底层实现包含两个指针：类型和值，类似于(*Type, *Value)，只有类型和值都为nil的时候，才等于nil**，看如下代码：  

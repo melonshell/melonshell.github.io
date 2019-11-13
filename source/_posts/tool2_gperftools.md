@@ -3,10 +3,9 @@ title: gperftools之CPU Profile
 date: 2019-09-10 22:55:47
 categories:
 - 工具
-- gperftools
+- 性能
 tags:
 - gperftools
-- 性能
 - CPU profile
 ---
 

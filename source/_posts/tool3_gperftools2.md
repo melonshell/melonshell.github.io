@@ -3,7 +3,7 @@ title: gperftools之heap profile
 date: 2019-09-14 23:36:27
 categories:
 - 工具
-- gperftools
+- 性能
 tags:
 - gperftools
 - 内存
