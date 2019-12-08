@@ -24,8 +24,20 @@ select {
 }
 ```
 ## 2.1 执行流程
-如果有一个或多个IO操作可以完成，Go运行时会随机选择一个执行；
+如果有一个或多个IO操作可以完成，Go运行时会伪随机选择一个执行；
 如果没有IO操作可以完成，若有default分支，则执行default分支语句；若没有default分支，则select语句将一直阻塞，直到至少一个IO操作可以执行。
+如果想一直处理channel，可以在select外加一个无限的for循环：
+```go
+for {
+    select {
+    case c <- x:
+        x, y = y, x+y
+    case <-quit:
+        fmt.Println("quit")
+        return
+    }
+}
+```
 
 ## 2.2 计算规则
 所有channel表达式都会被求值，所有被发送的表达式都会被求值，求值顺序：自上而下，从左到右
@@ -122,3 +134,17 @@ func main() {
 }
 ```
 对nil channel读写永久阻塞
+
+## 2.5 timeout
+如果没有case可以处理且没有default分支，select将一直阻塞，此时我们可能需要一个超时处理：利用time.After方法返回一个类型为<-chan Time的单向channel，在指定时间发送一个当前时间给返回的channel：
+```go
+func main() {
+	var ch chan int
+	select {
+		case <-ch:
+			fmt.Println("chan receive")
+		case v := <-time.After(time.Second * 10):
+			fmt.Println("timeout, v:", v)
+	}
+}
+```
