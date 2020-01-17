@@ -108,3 +108,14 @@ pre > code
 10 markdown中英文双引号在html中变中文双引号，连续两个减号(-)在html中被合并为一个减号的问题？
 node_modules\hexo-renderer-marked\index.js
 置  smartypants: false
+
+11 数学公式
+themes\3-hexo\_config.yml
+
+# MathJax 数学公式支持
+mathjax:
+  on: true #是否启用
+  per_page: true # 若只渲染单个页面，此选项设为false，页面内加入 mathjax: true
+  
+如果还是无法渲染，则安装插件mathJax:
+npm install hexo-math --save
