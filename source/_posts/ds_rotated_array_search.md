@@ -82,7 +82,7 @@ int binarySearch(int a[], int left, int right)
 {
     while(left < right)
     {
-        if(a[left] < a[right]) return left;
+        if(a[left] <= a[right] return left;
 
         int mid = (left + right) / 2;
         if(a[left] < a[mid])
@@ -96,6 +96,17 @@ int binarySearch(int a[], int left, int right)
         else
         {
             left++;
+
+            /*
+            if(left == mid)
+            {
+                left++;
+            }
+            else //注：left == mid情况逻辑可以包含在else中
+            {
+                if(a[mid] == a[right]) right = mid;
+                else left = mid + 1;
+            }*/
         }
     }
     return left;
@@ -103,11 +114,12 @@ int binarySearch(int a[], int left, int right)
 ```
 **算法思想**
 ```
-1) 如果a[left] < a[right]，则a[left]为最小值；
+1) 如果left = right，则a[left]为最小值；
+1) 如果a[left] <= a[right]，则a[left]为最小值；
 2) 否则，二分查找
    * a[left] < a[mid]，最小值在[mid + 1, right]；
    * a[left] > a[mid]，最小值在[left, mid]；
    * a[left] = a[mid]，
-        I. left = mid，a[left] >= a[right]，left++；
+        I. left = mid，a[left] > a[right]，left++；
         II.left != mid，非严格增时，无法确定最小值在mid左边还是右边，left++；
 ```
