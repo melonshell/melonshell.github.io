@@ -23,7 +23,8 @@ int binarySearch(int a[], int left, int right, int e)
         {
             return mid;
         }
-        else if(a[left] < a[mid])
+
+        if(a[left] < a[mid])
         {
             if(a[left] <= e && e < a[mid])
             {
@@ -47,7 +48,15 @@ int binarySearch(int a[], int left, int right, int e)
         }
         else
         {
-            left = mid + 1;
+            left++;
+            /*if(a[mid] == a[right])
+            {
+                right = mid - 1;
+            }
+            else
+            {
+                left = mid + 1;
+            }*/
         }
     }
     return -1;
@@ -62,7 +71,9 @@ int binarySearch(int a[], int left, int right, int e)
 3) 如果a[left] > a[mid]，则表明[mid, right]升序，
    * 若a[mid] < e < a[right]，则在[mid + 1, right]范围查找；
    * 否则，在[left, mid - 1]范围查找；
-4) 如果a[left] == a[mid]，则在[mid + 1, right]范围查找；
+4) 如果a[left] == a[mid]，则无法确认哪一部分升序，仅left++即可；
+情况1:{6,7,8,9,6,6,6,6,6,6,6}
+情况2:{6,6,6,6,6,6,9,1,2,3,4}
 ```
 
 # 3 查找最小值
