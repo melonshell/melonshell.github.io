@@ -44,7 +44,7 @@ void percolate_up(int heap[], int v, int j)
 如果heap[parent]大于v，则将heap[parent]保存在j位置，parent形成空位；
 
 # 4 删除堆顶元素
-删除堆顶元素，将最后一个元素置于堆顶，对堆顶元素执行percolate down操作，下面是更一般化的从j执行percolate down操作的代码：
+删除堆顶元素，将最后一个元素置于堆顶，对堆顶元素执行percolate down操作，下面是更一般化的从节点j执行percolate down操作的代码：
 ```cpp
 void percolate_down(int heap[], int j, int heap_len)
 {
@@ -78,7 +78,7 @@ void percolate_down(int heap[], int j, int heap_len)
 }
 ```
 **算法思想**
-从j开始向下调整；
+从节点j开始向下调整；
 找到左右孩子的最小者，注意判断左右孩子是否存在；
 保存heap[j]至变量v，形成空位；
 若左右孩子最小者i大于v，则保存heap[i]至heap[j]，i位置形成空位；
@@ -112,7 +112,7 @@ void heap_sort(int heap[], int heap_len)
 {
     build_heap(heap, heap_len);
 
-    while(heap_len > 0)
+    while(heap_len > 1)
     {
         int t = heap[0];
         heap[0] = heap[heap_len - 1];
