@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  <title>go pprof性能分析 | Hexo</title>
+  <meta name="keywords" content=" go ">
+  <meta name="description" content="go pprof性能分析 | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="keywords" content="缓存淘汰算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta property="og:url" content="http://melonshell.github.io/2020/02/07/ds_cache_eli/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce4.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce5.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce2.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce3.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce6.png">
+<meta property="og:updated_time" content="2020-02-07T14:47:40.476Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta name="twitter:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="twitter:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.0.1" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.0.1" rel="stylesheet">
+
+<link href="//cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet">
+<link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="/js/jquery.autocomplete.min.js?v=1.0.1"></script>
+
+<script src="//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script src="/js/iconfont.js?v=1.0.1"></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="false">
+  <input class="theme_blog_path" value>
+</div>
+
+<body>
+<!-- hexo-inject:begin --><!-- hexo-inject:end --><aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>melonshell</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="github" href="https://github.com/melonshell" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="email" href="mailto:yj.mapple@gmail.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=466243859&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+</div>
+
+
+
+<a class="more-menus">更多菜单</a>
+
+
+<ul>
+    <li><div class="all active">全部文章<small>(42)</small></div></li>
+    
+        
+            
+            <li><div data-rel="性能分析">性能分析<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="积累收集">积累收集<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="docker">docker<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="数据结构与算法">数据结构与算法<small>(8)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="go语言">go语言<small>(10)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="Redis">Redis<small>(2)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="TCP/IP系列">TCP/IP系列<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="技术文章阅读">技术文章阅读<small>(11)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="工具"><i class="fold iconfont icon-right"></i>工具<small>(4)</small></div>
+                
+                    <ul class="sub hide">
+                        
+                        <li><div data-rel="性能">性能<small>(4)</small></div>
+                            
+                        </li>
+                            
+                    </ul>
+                
+            </li>
+            
+        
+    
+        
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+    </div>
+    <div><a class="about  site_url"  href="/about">关于</a></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="42">
+<input type="hidden" id="yelog_site_word_count" value="78.2k">
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        友情链接
+        <i class="back-title-list"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <form onkeydown="if(event.keyCode==13){return false;}">
+        <input class="search" type="text" placeholder="Search..." autocomplete="off"id="local-search-input" >
+        <i class="cross"></i>
+        <span>
+            <label for="tagswitch">Tags:</label>
+            <input id="tagswitch" type="checkbox" style="display: none" />
+            <i id="tagsWitchIcon"></i>
+        </span>
+    </form>
+    <div class="tags-list">
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">cpu</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">分支预测</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存淘汰算法</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">bloom filter</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">堆</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">堆排序</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">lower_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">upper_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">查找</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">旋转数组</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">非递归遍历</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">查找第k大数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">go</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">channel</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">error</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">select</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">nil</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">gdb</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">接收者</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">常用命令</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">redis</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP/IP</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP_NODELAY</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">延迟ACK</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">docker compose</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">集群搭建</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">负载均衡</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存经典问题</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">多机房</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多活</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">微信</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">红包</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">RPC</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">单链表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">环</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">线程数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">单点</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">可用性</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">性能</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">高可用</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">长连接</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">gperftools</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">CPU profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">内存</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">heap profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">sar</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">CPU</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">IO</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">perf</a>
+    </li>
+    
+    <div class="clearfix"></div>
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="性能分析 "
+           href="/2019/10/10/CPU-branch-prediction/"
+           data-tag="cpu,分支预测"
+           data-author="" >
+            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/29/comm-article/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="精品文章">精品文章</span>
+            <span class="post-date" title="2019-10-29 23:00:17">2019/10/29</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/10/comm-url/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用链接">常用链接</span>
+            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/17/comm-tool/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用工具">常用工具</span>
+            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+        </a>
+        
+        <a  class="C/C++ "
+           href="/2020/01/03/cpp-basic/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="基础知识">基础知识</span>
+            <span class="post-date" title="2020-01-03 19:07:13">2020/01/03</span>
+        </a>
+        
+        <a  class="docker "
+           href="/2019/11/26/docker/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用命令">常用命令</span>
+            <span class="post-date" title="2019-11-26 16:13:27">2019/11/26</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/02/07/ds_cache_eli/"
+           data-tag="缓存淘汰算法"
+           data-author="" >
+            <span class="post-title" title="常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU">常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU</span>
+            <span class="post-date" title="2020-02-07 18:48:19">2020/02/07</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/31/ds_bloomfilter/"
+           data-tag="bloom filter"
+           data-author="" >
+            <span class="post-title" title="海量数据处理之Bloom Filter">海量数据处理之Bloom Filter</span>
+            <span class="post-date" title="2020-01-31 18:11:25">2020/01/31</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/19/ds_heap_sort/"
+           data-tag="堆,堆排序"
+           data-author="" >
+            <span class="post-title" title="堆和堆排序">堆和堆排序</span>
+            <span class="post-date" title="2020-01-19 18:58:57">2020/01/19</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/18/ds_lower_upper_bound/"
+           data-tag="lower_bound,upper_bound,查找"
+           data-author="" >
+            <span class="post-title" title="lower_bound和upper_bound算法">lower_bound和upper_bound算法</span>
+            <span class="post-date" title="2020-01-18 23:24:13">2020/01/18</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2019/12/25/ds_rotated_array_search/"
+           data-tag="查找,旋转数组"
+           data-author="" >
+            <span class="post-title" title="旋转数组查找">旋转数组查找</span>
+            <span class="post-date" title="2019-12-25 16:11:03">2019/12/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/29/ds_traverse_tree/"
+           data-tag="非递归遍历"
+           data-author="" >
+            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
+            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/20/ds_select_Kth/"
+           data-tag="查找第k大数"
+           data-author="" >
+            <span class="post-title" title="select问题">select问题</span>
+            <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/16/go1/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go环境搭建">go环境搭建</span>
+            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/17/go2/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go常用命令">go常用命令</span>
+            <span class="post-date" title="2019-09-17 22:46:33">2019/09/17</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/07/go10_channel/"
+           data-tag="go,channel"
+           data-author="" >
+            <span class="post-title" title="go语言之channel">go语言之channel</span>
+            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/25/go3/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
+            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/03/go4/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
+            <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/09/go7_error/"
+           data-tag="go,error"
+           data-author="" >
+            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
+            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/05/go9_select/"
+           data-tag="go,select"
+           data-author="" >
+            <span class="post-title" title="go语言之select">go语言之select</span>
+            <span class="post-date" title="2019-12-05 16:45:42">2019/12/05</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/13/go5_nil/"
+           data-tag="go,nil"
+           data-author="" >
+            <span class="post-title" title="go之nil">go之nil</span>
+            <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/20/go6_gdb/"
+           data-tag="go,gdb"
+           data-author="" >
+            <span class="post-title" title="gdb调试go">gdb调试go</span>
+            <span class="post-date" title="2019-10-20 09:07:31">2019/10/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/21/go8_receiver/"
+           data-tag="go,接收者"
+           data-author="" >
+            <span class="post-title" title="go语言之指针和值接收者">go语言之指针和值接收者</span>
+            <span class="post-date" title="2019-11-21 00:28:31">2019/11/21</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/02/05/redis0_cmd/"
+           data-tag="常用命令,redis"
+           data-author="" >
+            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
+            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
+        </a>
+        
+        <a  class="TCP/IP系列 "
+           href="/2019/11/23/tcp_nodelay_delayed_ack/"
+           data-tag="TCP/IP,TCP_NODELAY,延迟ACK"
+           data-author="" >
+            <span class="post-title" title="TCP_NODELAY和延迟ACK">TCP_NODELAY和延迟ACK</span>
+            <span class="post-date" title="2019-11-23 11:01:13">2019/11/23</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2019/12/29/redis1_build_cluster/"
+           data-tag="redis,docker compose,集群搭建"
+           data-author="" >
+            <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
+            <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/02/tech10_ha/"
+           data-tag="负载均衡"
+           data-author="" >
+            <span class="post-title" title="负载均衡知识总结">负载均衡知识总结</span>
+            <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/05/tech11_cache1/"
+           data-tag="缓存经典问题"
+           data-author="" >
+            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
+            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/22/tech1_db_split/"
+           data-tag="读写分离、垂直拆分、水平拆分、分库分表"
+           data-author="" >
+            <span class="post-title" title="读写分离、垂直拆分、水平拆分、分库分表">读写分离、垂直拆分、水平拆分、分库分表</span>
+            <span class="post-date" title="2020-01-22 17:03:33">2020/01/22</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/24/tech3_multi_room_living/"
+           data-tag="多机房,多活"
+           data-author="" >
+            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
+            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/23/tech2_wx_red_packet/"
+           data-tag="微信,红包"
+           data-author="" >
+            <span class="post-title" title="微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑">微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑</span>
+            <span class="post-date" title="2020-01-23 17:55:26">2020/01/23</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/25/tech4_rpc/"
+           data-tag="RPC"
+           data-author="" >
+            <span class="post-title" title="RPC client异步收发核心细节">RPC client异步收发核心细节</span>
+            <span class="post-date" title="2020-01-25 12:18:12">2020/01/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/15/ds_link_list_circle/"
+           data-tag="单链表,环"
+           data-author="" >
+            <span class="post-title" title="判断单链表是否有环">判断单链表是否有环</span>
+            <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/26/tech5_thread_num/"
+           data-tag="线程数"
+           data-author="" >
+            <span class="post-title" title="线程数究竟设置多少合理？">线程数究竟设置多少合理？</span>
+            <span class="post-date" title="2020-01-26 16:32:07">2020/01/26</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/28/tech7_single_ha_pf/"
+           data-tag="单点,可用性,性能"
+           data-author="" >
+            <span class="post-title" title="单点系统架构的可用性和性能优化">单点系统架构的可用性和性能优化</span>
+            <span class="post-date" title="2020-01-28 09:48:07">2020/01/28</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/29/tech8_ha/"
+           data-tag="高可用"
+           data-author="" >
+            <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
+            <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/30/tech9_58pc/"
+           data-tag="长连接"
+           data-author="" >
+            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
+            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/10/tool2_gperftools/"
+           data-tag="gperftools,CPU profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之CPU Profile">gperftools之CPU Profile</span>
+            <span class="post-date" title="2019-09-10 22:55:47">2019/09/10</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/14/tool3_gperftools2/"
+           data-tag="gperftools,内存,heap profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之heap profile">gperftools之heap profile</span>
+            <span class="post-date" title="2019-09-14 23:36:27">2019/09/14</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/30/tool4_sar/"
+           data-tag="内存,sar,CPU,IO"
+           data-author="" >
+            <span class="post-title" title="sar查看内存、CPU、IO">sar查看内存、CPU、IO</span>
+            <span class="post-date" title="2019-10-30 08:02:03">2019/10/30</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/27/tech6_lb_ha1/"
+           data-tag="负载均衡,高可用"
+           data-author="" >
+            <span class="post-title" title="负载均衡和高可用介绍">负载均衡和高可用介绍</span>
+            <span class="post-date" title="2020-01-27 23:25:02">2020/01/27</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/09/tool1_perf/"
+           data-tag="perf"
+           data-author="" >
+            <span class="post-title" title="perf性能分析">perf性能分析</span>
+            <span class="post-date" title="2019-10-09 07:54:19">2019/10/09</span>
+        </a>
+        
+    </nav>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div class="post">
+    <div class="pjax">
+        <article id="post-go3" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">go pprof性能分析</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            
+                <a href="javascript:" data-rel="go语言">go语言</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="javascript:" class="color3">go</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+        创建时间:<time class="date" title='更新时间: 2019-09-30 12:53:06'>2019-09-25 16:41</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        <span>字数:4.5k</span>
+        
+        
+        <span id="busuanzi_container_page_pv">
+            阅读:<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+        <span class="top-comment" title="跳转至评论区">
+            <a href="#comments">
+                评论:<span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </a>
+        </span>
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-pprof数据采样"><span class="toc-text">1 pprof数据采样</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-runtime-pprof"><span class="toc-text">2 runtime/pprof</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-cpuprofile"><span class="toc-text">2.1 cpuprofile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-memprofile"><span class="toc-text">2.2 memprofile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-blockprofile"><span class="toc-text">2.3 blockprofile</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-4-mutexprofile"><span class="toc-text">3.4 mutexprofile</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-net-http-pprof"><span class="toc-text">3 net/http/pprof</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-go-test"><span class="toc-text">4 go test</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-单元测试"><span class="toc-text">4.1 单元测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-2-基准测试"><span class="toc-text">4.2 基准测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-3-基准测试原理"><span class="toc-text">4.3 基准测试原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-4-内存测试"><span class="toc-text">4.4 内存测试</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-5-控制计时器"><span class="toc-text">4.5 控制计时器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-6-go-test采样"><span class="toc-text">4.6 go test采样</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-火焰图"><span class="toc-text">5 火焰图</span></a></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="1-pprof数据采样"><a href="#1-pprof数据采样" class="headerlink" title="1 pprof数据采样"></a>1 pprof数据采样</h1><p>pprof采样数据主要有三种获取方式：  </p>
+<ul>
+<li>runtime/pprof，手动调用runtime.StartCPUProfile runtime.StopCPUProfile等API生成和写入采样文件，灵活性高</li>
+<li>net/http/pprof，通过http服务获取Profile采样文件，适用于对应用程序的整理监控，通过runtime/pprof实现</li>
+<li>go test，go test -bench . -cpuprofile prof.cpu生成采样文件，适用于对函数进行针对性测试</li>
+</ul>
+<h1 id="2-runtime-pprof"><a href="#2-runtime-pprof" class="headerlink" title="2 runtime/pprof"></a>2 runtime/pprof</h1><p>runtime/pprof提供各种相对底层的API用于生成采样数据，一般应用程序更推荐使用net/http/pprof，runtime/pprof的API参考<a href="https://golang.org/pkg/runtime/pprof/" target="_blank" rel="noopener">runtime/pprof</a>或<a href="https://github.com/golang/go/blob/release-branch.go1.9/src/net/http/pprof/pprof.go" target="_blank" rel="noopener">http pprof实现</a>。  </p>
+<h2 id="2-1-cpuprofile"><a href="#2-1-cpuprofile" class="headerlink" title="2.1 cpuprofile"></a>2.1 cpuprofile</h2><p>我们可以使用gotest的命令行参数-cpuprofile和-memprofile，导入runtime/pprof，在<a href="https://github.com/hundt98847/multi-language-bench" target="_blank" rel="noopener">Hundt&#39;s benchmark programs</a>添加如下代码：  </p>
+<pre><code class="go">var cpuprofile = flag.String(&quot;cpuprofile&quot;, &quot;&quot;, &quot;write cpu profile to file&quot;)
+
+func main() {
+    flag.Parse()
+    if *cpuprofile != &quot;&quot; {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal(err)
+        }   
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+    }
+    ...</code></pre>
+<p>如设置了cpuprofile参数，CPU profile则会将Profile结果保存至此文件；最后需要调用StopCPUProfile，确保在程序退出前，所有数据都写入文件。  </p>
+<p>./havlak1 -cpuprofile=havlak1.prof  </p>
+<p><strong>go tool pprof havlak1 havlak1.prof</strong><br><strong>(pprof) top10</strong><br>输出结果如下：  </p>
+<pre><code>Showing nodes accounting for 39.93s, 64.17% of 62.23s total
+Dropped 154 nodes (cum &lt;= 0.31s)
+Showing top 10 nodes out of 83
+      flat  flat%   sum%        cum   cum%
+     8.50s 13.66% 13.66%      9.99s 16.05%  runtime.findObject
+     7.41s 11.91% 25.57%     13.93s 22.38%  runtime.scanobject
+     5.38s  8.65% 34.21%      6.27s 10.08%  runtime.mapaccess1_fast64
+     4.87s  7.83% 42.04%     44.51s 71.52%  havlakloopfinder.FindLoops
+     3.40s  5.46% 47.50%     16.68s 26.80%  runtime.mallocgc
+     2.43s  3.90% 51.41%      3.21s  5.16%  runtime.heapBitsSetType
+     2.35s  3.78% 55.18%     11.03s 17.72%  runtime.gcWriteBarrier
+     2.20s  3.54% 58.72%      7.86s 12.63%  runtime.mapassign_fast64ptr
+     1.89s  3.04% 61.75%      9.29s 14.93%  runtime.wbBufFlush1
+     1.50s  2.41% 64.17%      2.08s  3.34%  runtime.spanO</code></pre><p>开启CPU Profile，Go程序每10ms会记录一个当前运行goroutine栈的计数器组成的样本，输出各列含义如下：  </p>
+<ul>
+<li>flag： 采样时，该函数正在运行的次数 * 采样频率(10ms)，即估算的函数运行时间，此时间不包括等待被调函数返回；</li>
+<li>flag%：flag / 总采样时间</li>
+<li>sum%：前面所有行flat%的累加值，如第二行sum% = 25.57% = 13.66% + 11.91%</li>
+<li>cum：采样时，该函数出现在调用栈的采样时间，包括等待被调函数返回</li>
+<li>cum%：cum / 总采样时间</li>
+</ul>
+<p>使用-cum参数按照第四第五列排序：<br><strong>(pprof) top5 -cum</strong>  </p>
+<pre><code>Showing nodes accounting for 4.93s, 7.92% of 62.23s total
+Dropped 154 nodes (cum &lt;= 0.31s)
+Showing top 5 nodes out of 83
+      flat  flat%   sum%        cum   cum%
+         0     0%     0%     44.99s 72.30%  main.main
+         0     0%     0%     44.99s 72.30%  runtime.main
+         0     0%     0%     44.51s 71.52%  havlakloopfinder.FindHavlakLoops
+     4.87s  7.83%  7.83%     44.51s 71.52%  havlakloopfinder.FindLoops
+     0.06s 0.096%  7.92%     24.92s 40.04%  runtime.systemstack </code></pre><p>事实上，main.main和havlakloopfinder.FindLoops的总数应该是100%，但是每个栈样本仅包含栈底100帧。约30%的样本，递归函数havlakloopfinder.DFS深度（相比main.main）超过100帧，因此完整的trace被截断。  </p>
+<p>如果安装了<a href="http://www.graphviz.org/" target="_blank" rel="noopener">graphviz</a>，<strong>web</strong>命令可以生成SVG格式的图形Profile，并且用浏览器打开：<br><strong>(pprof) web</strong><br>也可以生成pdf格式的Profile：<br><strong>(pprof) pdf</strong><br>不用交互式：<br><strong>go tool pprof -pdf ./havlak1 ./havlak1.prof &gt; cpu.pdf</strong>  </p>
+<p>图形化Profile结果如下图：<br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909262046.png" alt="CPU Profile结果"></div>  </p>
+<p>每个方框对应一个函数，方框大小和函数运行采样时间一致，X到Y的边表示X调用Y，边上的数字为调用时间。分析发现，mapaccess1_fast64占用CPU采样时间最多，我们可以用web或pdf命令Profile指定的函数：<br><strong>(pprof) web runtime.mapaccess1_fast64</strong><br><strong>(pprof) pdf runtime.mapaccess1_fast64</strong><br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909262147.png" alt="CPU Profile结果"></div></p>
+<p>list FuncName可以显示函数名以及每行代码的采样分析： </p>
+<p><strong>(pprof) list havlakloopfinder.DFS</strong>  </p>
+<pre><code>Total: 1.04mins
+ROUTINE ======================== havlakloopfinder.DFS in /root/go/src/havlakloopfinder/havlakloopfinder.go
+     710ms     11.37s (flat, cum) 18.27% of Total
+         .          .    153:    return false
+         .          .    154:}
+         .          .    155:
+         .          .    156:// DFS - Depth-First-Search and node numbering.
+         .          .    157://
+      20ms       20ms    158:func DFS(currentNode *cfg.BasicBlock, nodes []*UnionFindNode, number map[*cfg.BasicBlock]int, last []int, current int) int {
+      10ms      560ms    159:    nodes[current].Init(currentNode, current)
+      20ms      450ms    160:    number[currentNode] = current
+         .          .    161:
+         .          .    162:    lastid := current
+      70ms      540ms    163:    for ll := currentNode.OutEdges().Front(); ll != nil; ll = ll.Next() {
+     370ms         3s    164:        if target := ll.Value.(*cfg.BasicBlock); number[target] == unvisited {
+     110ms      5.74s    165:            lastid = DFS(target, nodes, number, last, lastid+1)
+         .          .    166:        }
+         .          .    167:    }
+      90ms      1.04s    168:    last[number[currentNode]] = lastid
+      20ms       20ms    169:    return lastid
+         .          .    170:}
+         .          .    171:
+         .          .    172:// FindLoops
+         .          .    173://
+         .          .    174:// Find loops and build loop forest using Havlak&#39;s algorithm, which</code></pre><p>disasm显示函数的汇编代码：<br><strong>(pprof) disasm havlakloopfinder.DFS</strong> </p>
+<p>除递归DFS调用外，160/164/168行表明number map的访问消耗了大量时间，我们可以用slice []int优化。  </p>
+<h2 id="2-2-memprofile"><a href="#2-2-memprofile" class="headerlink" title="2.2 memprofile"></a>2.2 memprofile</h2><p>优化之后可以看到，main.DFS不再出现在profile中，且其余部分的运行时间也降低了。现在程序在分配内存和GC上消耗了大量时间（runtime.mallocgc分配内存以及周期性地GC，占用了26.8%的时间），为了找出为什么GC运行如此之多，我们需要找出哪个函数在分配内存。这里给程序添加内存profile，如果带有-memprofile命令行参数，则程序在一次循环查找迭代后停止，写内存profile文件，然后退出：  </p>
+<pre><code class="go">var memprofile = flag.String(&quot;memprofile&quot;, &quot;&quot;, &quot;write cpu profile to file&quot;)
+func main() {
+    flag.Parse()
+...
+for i := 0; i &lt; 50; i++ {
+        fmt.Printf(&quot;.&quot;)
+        havlakloopfinder.FindHavlakLoops(cfgraph, lsg.NewLSG())
+
+        if *memprofile != &quot;&quot; {
+            f, err := os.Create(*memprofile)
+            if err != nil {
+                log.Fatal(err)
+            }
+            pprof.WriteHeapProfile(f)
+            f.Close()
+            return
+        }
+    }</code></pre>
+<p>执行命令：  </p>
+<p>./havlak2 -memprofile=havlak2.mprof<br>go tool pprof havlak2 havlak2.mprof  </p>
+<pre><code>File: havlak2
+Type: inuse_space
+Time: Sep 26, 2019 at 11:31pm (CST)
+Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)
+(pprof) top5
+Showing nodes accounting for 221.97MB, 94.44% of 235.03MB total
+Showing top 5 nodes out of 21
+      flat  flat%   sum%        cum   cum%
+   85.46MB 36.36% 36.36%   167.97MB 71.46%  havlakloopfinder.FindLoops
+   60.50MB 25.74% 62.10%    60.50MB 25.74%  container/list.(*List).insertValue
+      35MB 14.89% 77.00%       35MB 14.89%  container/list.New
+   28.50MB 12.13% 89.12%    28.50MB 12.13%  basicblock.NewBasicBlock
+   12.50MB  5.32% 94.44%    12.50MB  5.32%  lsg.(*LSG).NewLoop  </code></pre><p>为减少开销，内存Profiler仅记录分配的每半兆字节大约一个块的信息（采样率1-in-524288）。FindLoops分配了大约85.46MB内存， </p>
+<p><strong>(pprof) list FindLoops</strong> </p>
+<pre><code>
+         .          .    230:
+         .          .    231:        if nodeW.NumPred() &gt; 0 {
+         .          .    232:            for ll := nodeW.InEdges().Front(); ll != nil; ll = ll.Next() {
+         .          .    233:                nodeV := ll.Value.(*cfg.BasicBlock)
+         .          .    234:                v := number[nodeV]
+         .          .    235:                if v == unvisited {
+         .          .    236:                    continue // dead node
+         .          .    237:                }
+         .          .    238:
+         .          .    239:                if isAncestor(w, v, last) {
+  512.01kB        2MB    240:                    backPreds[w].PushBack(v)
+         .          .    241:                } else {
+   22.50MB    22.50MB    242:                    nonBackPreds[w][v] = true
+         .          .    243:                }
+         .          .    244:            }
+         .          .    245:        }
+         .          .    246:    }</code></pre><p>可以看到，瓶颈仍然是map的使用，FindLoops分配了22.5MB的map。 如果go tool pprof带上参数--inuse_objects，则Profile将会记录内存分配计数： </p>
+<p><strong>go tool pprof --inuse_objects havlak2 havlak2.mprof</strong>  </p>
+<pre><code>         .          .    230:
+         .          .    231:        if nodeW.NumPred() &gt; 0 {
+         .          .    232:            for ll := nodeW.InEdges().Front(); ll != nil; ll = ll.Next() {
+         .          .    233:                nodeV := ll.Value.(*cfg.BasicBlock)
+         .          .    234:                v := number[nodeV]
+         .          .    235:                if v == unvisited {
+         .          .    236:                    continue // dead node
+         .          .    237:                }
+         .          .    238:
+         .          .    239:                if isAncestor(w, v, last) {
+     32768      65537    240:                    backPreds[w].PushBack(v)
+         .          .    241:                } else {
+    245782     245782    242:                    nonBackPreds[w][v] = true
+         .          .    243:                }
+         .          .    244:            }
+         .          .    245:        }
+         .          .    246:    }</code></pre><p>这里只需要简单的set，但是却用了map存储，可以用slice优化。  </p>
+<p>再次查看<strong>CPU profile</strong>可以看到GC占用了大量时间，<br>./havlak3 -cpuprofile=havlak3.prof<br>go tool pprof ./havlak3 ./havlak3.prof </p>
+<pre><code>File: havlak3
+Type: cpu
+Time: Sep 28, 2019 at 10:30am (CST)
+Duration: 1.02mins, Total samples = 1.01mins (98.87%)
+Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)
+(pprof) top5
+Showing nodes accounting for 28.66s, 47.29% of 60.61s total
+Dropped 163 nodes (cum &lt;= 0.30s)
+Showing top 5 nodes out of 82
+      flat  flat%   sum%        cum   cum%
+     8.53s 14.07% 14.07%      9.69s 15.99%  runtime.findObject
+     6.87s 11.33% 25.41%     13.79s 22.75%  runtime.scanobject
+     5.20s  8.58% 33.99%      5.90s  9.73%  runtime.mapaccess1_fast64
+     4.63s  7.64% 41.63%     43.20s 71.28%  havlakloopfinder.FindLoops
+     3.43s  5.66% 47.29%     16.05s 26.48%  runtime.mallocgc</code></pre><p>另一个查看GC为什么如此耗时的方法是，在mallocgc中找到导致GC的最耗时的内存分配：<br><strong>(pprof) web mallocgc</strong><br><strong>(pprof) pdf mallocgc</strong><br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909281314.png" alt="CPU Profile之mallocgc 1"></div>  </p>
+<p>由于存在很多运行时间很少的结点，生成的图形结果比较复杂，很难发现线索，可以用--nodefraction参数过滤，比如仅显示运行时间不小于10%的结点：  </p>
+<p><strong>go tool pprof --nodefraction=0.1 ./havlak3 ./havlak3.prof</strong><br><strong>(pprof) pdf mallocgc</strong><br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909281408.png" alt="CPU Profile之mallocgc 2"></div><br>沿着粗线箭头可以看到，FindLoops是导致GC的主要原因，list FindLoops可以发现每次FindLoops调用会分配大量结构体，可以用一个全局结构体优化（工程不推荐，也非线程安全）。  </p>
+<h2 id="2-3-blockprofile"><a href="#2-3-blockprofile" class="headerlink" title="2.3 blockprofile"></a>2.3 blockprofile</h2><p>Block profile显示导致阻塞同步原语(mutex channel)的函数调用，开启此功能需要在main或者init函数中用runtime.SetBlockProfileRate设置profile速率。  </p>
+<pre><code>var mutex sync.Mutex
+
+func worker(wg * sync.WaitGroup) {
+    defer wg.Done()
+    mutex.Lock()
+    time.Sleep(1 * time.Millisecond)
+    mutex.Unlock()
+}
+
+func main()  {
+    // rate = 1 时, 统计所有的 block event, 
+    // rate &lt;=0 时，则关闭block profiling
+    // rate &gt; 1 时，为 ns 数，阻塞时间t&gt;rate的event 一定会被统计，小于rate则有t/rate 的几率被统计
+    // 参考 https://github.com/golang/go/blob/release-branch.go1.9/src/runtime/mprof.go#L397
+
+    runtime.SetBlockProfileRate(1 * 1000 * 1000)
+    var wg sync.WaitGroup
+
+    wg.Add(1)
+    mutex.Lock()
+
+    go worker(&amp;wg)
+    time.Sleep(2 * time.Millisecond)
+
+    mutex.Unlock()
+    wg.Wait()
+
+    p := pprof.Lookup(&quot;block&quot;)
+    if p == nil {
+        fmt.Errorf(&quot;block prof not found&quot;)
+        return
+    }
+    f, err := os.Create(&quot;block.prof&quot;)
+    if err != nil {
+        fmt.Errorf(&quot;%v&quot;, err.Error())
+        return
+    }
+    defer f.Close()
+    err = p.WriteTo(f, 0)
+    if err != nil {
+        fmt.Errorf(&quot;%v&quot;, err.Error())
+        return
+    }
+}
+
+go build -o bk b.go
+./bk
+go tool pprof bk block.prof
+(pprof) top
+Showing nodes accounting for 3.16ms, 100% of 3.16ms total
+      flat  flat%   sum%        cum   cum%
+    2.04ms 64.43% 64.43%     2.04ms 64.43%  sync.(*Mutex).Lock
+    1.12ms 35.57%   100%     1.12ms 35.57%  sync.(*WaitGroup).Wait
+         0     0%   100%     1.12ms 35.57%  main.main
+         0     0%   100%     2.04ms 64.43%  main.worker
+         0     0%   100%     1.12ms 35.57%  runtime.main</code></pre><p>可以看到sync.(<em>Mutex).Lock阻塞了2.04ms，sync.(</em>WaitGroup).Wait阻塞了1.12ms，即main函数阻塞了2.04ms，worker函数阻塞了1.12ms，通过web/pdf命令查看：<br><strong>(pprof)</strong> pdf<br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909291236.png" alt="Block Profile"></div> </p>
+<h2 id="3-4-mutexprofile"><a href="#3-4-mutexprofile" class="headerlink" title="3.4 mutexprofile"></a>3.4 mutexprofile</h2><pre><code>var mutex sync.Mutex
+
+func worker(wg * sync.WaitGroup) {
+    defer wg.Done()
+    mutex.Lock()
+    time.Sleep(1 * time.Millisecond)
+    mutex.Unlock()
+}
+
+func main()  {
+    // 当 rate = 0 时，关闭 mutex prof (默认值)
+    // 当 rate = 1 时，表示记录所有的 mutex event
+    // 当 rate &gt; 1 时，记录 1/rate 的 mutex event(随机)
+    runtime.SetMutexProfileFraction(1)
+    var wg sync.WaitGroup
+
+    wg.Add(1)
+    mutex.Lock()
+
+    go worker(&amp;wg)
+    time.Sleep(2 * time.Millisecond)
+
+    mutex.Unlock()
+    wg.Wait()
+
+    p := pprof.Lookup(&quot;mutex&quot;)
+    if p == nil {
+        fmt.Errorf(&quot;block prof not found&quot;)
+        return
+    }
+    f, err := os.Create(&quot;mutex.prof&quot;)
+    if err != nil {
+        fmt.Errorf(&quot;%v&quot;, err.Error())
+        return
+    }
+    defer f.Close()
+    err = p.WriteTo(f, 0)
+    if err != nil {
+        fmt.Errorf(&quot;%v&quot;, err.Error())
+        return
+    }
+}
+
+go build -o mx m.go
+./mx
+go tool pprof ./mx mutex.prof
+File: mx
+Type: delay
+Time: Sep 29, 2019 at 12:41pm (CST)
+Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)
+(pprof) top
+Showing nodes accounting for 2.07ms, 100% of 2.07ms total
+      flat  flat%   sum%        cum   cum%
+    2.07ms   100%   100%     2.07ms   100%  sync.(*Mutex).Unlock
+         0     0%   100%     2.07ms   100%  main.main
+         0     0%   100%     2.07ms   100%  runtime.main
+(pprof) pdf</code></pre><p>结果如下：<br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909291244.png" alt="Block Profile"></div></p>
+<h1 id="3-net-http-pprof"><a href="#3-net-http-pprof" class="headerlink" title="3 net/http/pprof"></a>3 net/http/pprof</h1><p>在应用程序中导入import _ &quot;net/http/pprof&quot;，并启动http server即可：  </p>
+<pre><code>package data
+
+var datas []string
+
+func Add(str string) string {
+    data := []byte(str)
+    sData := string(data)
+    datas = append(datas, sData)
+
+    return sData
+}
+
+//////////////////////////////////////////////////////////////
+
+package main
+
+import (
+    &quot;data&quot;
+    &quot;log&quot;
+    &quot;net/http&quot;
+    _&quot;net/http/pprof&quot;
+    &quot;time&quot;
+)
+
+func main() {
+    go func() {
+        for {
+            log.Println(data.Add(&quot;https://github.com/EDDYCJY&quot;))
+            time.Sleep(time.Duration(1) * time.Second)
+        }
+    }()
+
+    http.ListenAndServe(&quot;0.0.0.0:6060&quot;, nil)
+}
+</code></pre><p>之后可以通过<a href="http://localhost:6060/debug/pprof/CMD获取对应的采样数据，支持的CMD有" target="_blank" rel="noopener">http://localhost:6060/debug/pprof/CMD获取对应的采样数据，支持的CMD有</a>:  </p>
+<ul>
+<li>goroutine：获取程序当前所有goroutine的堆栈信息</li>
+<li>heap：包含每个goroutine分配大小，分配堆栈等，每分配runtime.MemProfileRate（默认512K）个字节进行一次数据采样</li>
+<li>threadcreate：获取导致创建OS线程的goroutine堆栈</li>
+<li>block：获取导致阻塞的goroutine堆栈（如channel，mutex等），使用前需要先调用runtime.SetBlockProfileRate</li>
+<li>mutex：获取导致mutex争用的goroutine堆栈，使用前需要先调用runtime.SetMutexProfileFraction</li>
+</ul>
+<p>以上五个CMD都通过<a href="https://github.com/golang/go/blob/release-branch.go1.9/src/runtime/pprof/pprof.go#L135" target="_blank" rel="noopener">runtime/pprof Profile</a>结构体统一管理，以Lookup提供统一查询接口，有相似的返回值(goroutine堆栈)，它们都支持一个debug URL参数，默认为0，此时返回的采样数据是不可人为解读的函数地址列表，需要结合pprof工具才能还原函数名字；debug=1时，会将函数地址转换为函数名，即脱离pprof在浏览器中直接查看，对goroutine的CMD来说，还支持debug=2参数，此时将以unrecovered panic的格式打印堆栈，可读性更高。  </p>
+<p>以上几种Profile可在<a href="http://localhost:6060/debug/pprof/中看到，除此之外go" target="_blank" rel="noopener">http://localhost:6060/debug/pprof/中看到，除此之外go</a> pprof的CMD还包括：  </p>
+<ul>
+<li>cmdline：获取程序的命令行启动参数</li>
+<li>profile：获取指定时间内（从请求开始）的cpuprofile，倒计时结束后自动返回。 参数：seconds，默认值30秒，CPU profile每秒钟采样100次，收集当前运行的goroutine堆栈信息</li>
+<li>symbol：用于将地址列表转换为函数名列表，地址通过&#39;+&#39;分隔，如URL/debug/pprof?0x18d067f+0x17933e7</li>
+<li>trace：对应用程序进行执行追踪，参数：seconds，默认值1s</li>
+</ul>
+<p>这几个CMD因为各种原因没有整合到Profile结构中，但就使用上而言没有区别。  如访问<a href="http://localhost:6060/debug/pprof/或者http://132.232.51.227:6060/debug/pprof/" target="_blank" rel="noopener">http://localhost:6060/debug/pprof/或者http://132.232.51.227:6060/debug/pprof/</a><br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909291425.png" alt="http prof"></div><br><font color="Red"><br><strong>使用net/http/pprof，go tool pprof可直接跟URL：</strong><br><strong>go tool pprof <a href="http://localhost:6060/debug/pprof/profile" target="_blank" rel="noopener">http://localhost:6060/debug/pprof/profile</a></strong><br><strong>go tool pprof --seconds 25 <a href="http://localhost:6060/debug/pprof/profile" target="_blank" rel="noopener">http://localhost:6060/debug/pprof/profile</a></strong>  </font></p>
+<pre><code>Fetching profile over HTTP from http://localhost:6060/debug/pprof/profile
+Saved profile in /root/pprof/pprof.pp.samples.cpu.004.pb.gz
+File: pp
+Type: cpu
+Time: Sep 29, 2019 at 11:42pm (CST)
+Duration: 30s, Total samples = 0 
+No samples were found with the default sample value type.
+Try &quot;sample_index&quot; command to analyze different sample values.
+Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)</code></pre><p>会生成pprof.pp.samples.cpu.004.pb.gz文件。<br></p>
+<h1 id="4-go-test"><a href="#4-go-test" class="headerlink" title="4 go test"></a>4 go test</h1><p>通过runtime/pprof对应用整体分析找出问题点后，再用go test进行基准测试，进一步确定热点，加以优化并对比测试。下面是一个对package data测试的例子：<br>d.go源码文件如下：  </p>
+<pre><code>package data
+
+var datas []string
+
+func Add(str string) string {
+    data := []byte(str)
+    sData := string(data)
+    datas = append(datas, sData)
+
+    return sData
+}</code></pre><p>d_test.go源码文件如下:  </p>
+<pre><code>package data
+
+import (
+    &quot;strconv&quot;
+    &quot;testing&quot;
+)
+
+func TestAdd(t *testing.T) {
+    t.Log(Add(&quot;hello&quot;))
+}
+
+func BenchmarkAdd(b *testing.B) {
+    for i := 0; i &lt; b.N; i++ {
+        s := strconv.Itoa(i)
+        Add(&quot;world &quot; + s)
+    }
+}</code></pre><h2 id="4-1-单元测试"><a href="#4-1-单元测试" class="headerlink" title="4.1 单元测试"></a>4.1 单元测试</h2><p>执行单元测试：<br>go test d_test.go d.go -v  </p>
+<p>指定测试函数：<br>go test d_test.go d.go -run=&#39;TestAdd&#39; -v  </p>
+<pre><code>=== RUN   TestAdd
+--- PASS: TestAdd (0.00s)
+    d_test.go:9: hello
+goos: linux
+goarch: amd64
+BenchmarkAdd      2586132           499 ns/op
+PASS
+ok      command-line-arguments    1.851s
+</code></pre><h2 id="4-2-基准测试"><a href="#4-2-基准测试" class="headerlink" title="4.2 基准测试"></a>4.2 基准测试</h2><p>执行基准测试：<br>go test -v -bench=. d_test.go d.go<br>-bench=.表示运行d_test.go文件里的所有基准测试，和单元测试的-run类似，BenchmarkAdd运行了2586132次，也就是testing.B结构中提供给程序的N，499ns/op表示每一个操作的耗费时间。windows下使用go test命令时，-bench=.应该写为-bench=&quot;.&quot;。  </p>
+<h2 id="4-3-基准测试原理"><a href="#4-3-基准测试原理" class="headerlink" title="4.3 基准测试原理"></a>4.3 基准测试原理</h2><p>基准测试框架对一个测试用例的默认测试时间是1秒，开始测试时，若Benmark开头的基准测试用例函数返回不到1秒，那么testing.B中的N值将按1，2，5，10，20，50......递增，同时以递增后的值重新调用基准测试用例函数。  </p>
+<p><strong>自定义基准测试时间：</strong><br>通过-benchtime参数可以自定义测试时间：<br>go test -v -bench=. -benchtime=5s d_test.go d.go  </p>
+<pre><code>=== RUN   TestAdd
+--- PASS: TestAdd (0.00s)
+    d_test.go:9: hello
+goos: linux
+goarch: amd64
+BenchmarkAdd      5696103           472 ns/op
+PASS
+ok      command-line-arguments    3.214s</code></pre><h2 id="4-4-内存测试"><a href="#4-4-内存测试" class="headerlink" title="4.4 内存测试"></a>4.4 内存测试</h2><p>基准测试可以对一段代码可能存在的内存分配进行统计，在命令行参数中添加-benchmem参数以显示内存分配情况：<br>go test -v -bench=Add -benchmem d_test.go d.go  </p>
+<pre><code>=== RUN   TestAdd
+--- PASS: TestAdd (0.00s)
+    d_test.go:9: hello
+goos: linux
+goarch: amd64
+BenchmarkAdd      2697740           536 ns/op         116 B/op           1 allocs/op
+PASS
+ok      command-line-arguments    2.087s</code></pre><p>-bench=Add，指定测试BenchmarkAdd函数；<br>116B/op表示每会一次调用需要分配116个字节，1 allocs/op表示每一次调用有两次分配，可以根据这些信息迅速找到问题分配点，从而进行优化和调整。  </p>
+<h2 id="4-5-控制计时器"><a href="#4-5-控制计时器" class="headerlink" title="4.5 控制计时器"></a>4.5 控制计时器</h2><p>有些测试需要一定的启动和初始化时间，如果从BenchmarkXXX()函数开始计时会很大程度上影响测试结果的精准性。testing.B提供了一系列的方法可以方便地控制计时器，从而让计时器只在需要的区间进行测试：</p>
+<pre><code>func BenchmarkAdd(b *testing.B){
+    //重置计时器
+    b.ResetTimer()
+    //停止计时器
+    b.StopTimer()
+    //开始计时器
+    b.StartTimer()
+}</code></pre><p>从Benchmark函数开始，timer就开始计数，StopTimer()可以停止这个计数过程，做一些耗时的操作，通过StartTimer()重新开始计时，ResetTimer()可以重置计数器的数据。计数器内部不仅包含耗时数据，还包括内存分配的数据。  </p>
+<h2 id="4-6-go-test采样"><a href="#4-6-go-test采样" class="headerlink" title="4.6 go test采样"></a>4.6 go test采样</h2><p><strong>方法1：</strong><br>首先生成pprof需要用到的二进制文件：<br>go test -c d_test.go d.go -o MyTest  </p>
+<p>执行基准测试，并忽略任何单元测试，test flag前面需要加上&#39;test.&#39;前缀：<br>./MyTest -test.bench BenchmarkAdd -test.run XXX -test.cpuprofile cpu.prof</p>
+<p><strong>方法2：</strong><br>go test -bench BenchmarkAdd -run XXX -cpuprofile=cpu.prof .  </p>
+<p>go test可以直接加-cpuprofile/-mutexprofilefraction等参数实现pprof数据的采样和生成，如：<br>go test -bench BenchmarkAdd -run XXX -mutexprofilefraction=1 -mutexprofile=mutex.prof<br>具体参见go help test。  </p>
+<h1 id="5-火焰图"><a href="#5-火焰图" class="headerlink" title="5 火焰图"></a>5 火焰图</h1><p>windows安装<a href="http://www.graphviz.org/" target="_blank" rel="noopener">graphviz</a>，将其bin目录添加至系统环境变量PATH；<br>内网服务监听标准Web端口(80/8080/8081/443)；  </p>
+<p><strong>方法1：</strong> 在windows MinGW或CMD窗口执行命令：go tool pprof -http=:8080 <a href="http://localhost:8081/debug/pprof/profile，**备注**：go" target="_blank" rel="noopener">http://localhost:8081/debug/pprof/profile，**备注**：go</a> tool pprof -http=:8080 <a href="http://100.94.6.138:8081/debug/pprof/profile用外网IP(132.232.51.227)一直无法连接成功，猜测是go" target="_blank" rel="noopener">http://100.94.6.138:8081/debug/pprof/profile用外网IP(132.232.51.227)一直无法连接成功，猜测是go</a> tool pprof需要设置代理，暂时后续分析原因！！！  </p>
+<p>默认取样时间为30s，可以通过-seconds指定采样时间：<br>go tool pprof -http=:8080 -seconds=300 <a href="http://100.94.6.138:8081/debug/pprof/profile" target="_blank" rel="noopener">http://100.94.6.138:8081/debug/pprof/profile</a><br>go tool pprof -http=:8080 <a href="http://100.94.6.138:8081/debug/pprof/profile?seconds=300" target="_blank" rel="noopener">http://100.94.6.138:8081/debug/pprof/profile?seconds=300</a>  </p>
+<p><strong>方法2：</strong> 在linux服务器执行：go tool pprof <a href="http://localhost:8081/debug/pprof/profile，或者指定采样时间：go" target="_blank" rel="noopener">http://localhost:8081/debug/pprof/profile，或者指定采样时间：go</a> tool pprof -seconds=300 <a href="http://localhost:8081/debug/pprof/profile" target="_blank" rel="noopener">http://localhost:8081/debug/pprof/profile</a>  </p>
+<pre><code>Saved profile in /root/pprof/pprof.pp.samples.cpu.011.pb.gz
+File: pp
+Type: cpu
+Time: Sep 30, 2019 at 12:49am (CST)
+Duration: 30s, Total samples = 0 
+No samples were found with the default sample value type.
+Try &quot;sample_index&quot; command to analyze different sample values.
+Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)</code></pre><p>将/root/pprof/pprof.pp.samples.cpu.011.pb.gz保存至windows，在windows CMD或者MinGW窗口执行：go tool pprof -http=:8090 pprof.pp.samples.cpu.011.pb.gz自动打开浏览器。<br>如果有prof文件，则执行：go tool pprof -http=:8090 cpu.prof  </p>
+<p><strong>方法3：</strong> 用wget先下载profile文件：wget <a href="http://100.94.6.138:8081/debug/pprof/profile" target="_blank" rel="noopener">http://100.94.6.138:8081/debug/pprof/profile</a> -O cpu.prof，或者指定采样时间：wget <a href="http://100.94.6.138:8081/debug/pprof/profile?seconds=60" target="_blank" rel="noopener">http://100.94.6.138:8081/debug/pprof/profile?seconds=60</a> -O cpu.prof，再使用go tool pprof分析，windows CMD或MinGW窗口执行：go tool pprof -http=:8090 cpu.prof<br>  <div style="height: 80%; width: 80%"><img src="/pic/go3201909301219.png" alt="PProf之flamegraph"></div></p>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至yj.mapple@gmail.com </span>
+    </div>
+</article>
+
+
+<p>
+    <a href="javascript:void(0)" class="dashang" onclick="dashangToggle()">赏</a>
+</p>
+
+
+<div class="article_copyright">
+    <p><span class="copy-title">文章标题:</span>go pprof性能分析</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">4.5k</span></p>
+    <p><span class="copy-title">本文作者:</span><a href="javascript:void(0)" title="melonshell">melonshell</a></p>
+    <p><span class="copy-title">发布时间:</span>2019-09-25, 16:41:07</p>
+    <p><span class="copy-title">最后更新:</span>2019-09-30, 12:53:06</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2019/09/25/go3/" title="go pprof性能分析">http://melonshell.github.io/2019/09/25/go3/</a>
+    <p>
+        <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+    </p>
+</div>
+
+
+
+    <div id="comments"></div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+
+<script type="text/javascript">
+    $.getScript('/js/gitalk.js', function () {
+        var gitalk = new Gitalk({
+            clientID: 'e97d9b9b791221194492',
+            clientSecret: 'c3930f83c344398e78fe43dff9bd0af7ce3024ab',
+            repo: 'melonshell.github.io',
+            owner: 'melonshell',
+            admin: ['melonshell'],
+            id: decodeURI(location.pathname),
+            distractionFreeMode: 'true',
+            language: 'zh-CN',
+            perPage: parseInt('10',10)
+        })
+        gitalk.render('comments')
+    })
+</script>
+
+
+
+
+    
+        <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<input type="hidden" id="MathJax-js"
+        value="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</input>
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry">©2019-2099 melonshell</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full"><span class="min "></span></button>
+<button class="post-toc-menu"><span class="post-toc-menu-icons"></span></button>
+<div class="post-toc"><span class="post-toc-title">目录</span>
+    <div class="post-toc-content">
+
+    </div>
+</div>
+<a class="" id="rocket" href="javascript:void(0)"></a>
+    </div>
+</div>
+<div class="acParent"></div>
+
+<div class="hide_box" onclick="dashangToggle()"></div>
+<div class="shang_box">
+    <a class="shang_close" href="javascript:void(0)" onclick="dashangToggle()">×</a>
+    <div class="shang_tit">
+        <p>喜欢就点赞,疼爱就打赏</p>
+    </div>
+    <div class="shang_payimg">
+        <div class="pay_img">
+            <img src="/img/alipay.jpg" class="alipay" title="扫码支持">
+            <img src="/img/weixin.jpg" class="weixin" title="扫码支持">
+        </div>
+    </div>
+    <div class="shang_payselect">
+        <span><label><input type="radio" name="pay" checked value="alipay">支付宝</label></span><span><label><input type="radio" name="pay" value="weixin">微信</label></span>
+    </div>
+</div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.0.1" ></script>
+
+<script src="/js/script.js?v=1.0.1" ></script>
+<script>
+    var img_resize = 'default';
+    /*作者、标签的自动补全*/
+    $(function () {
+        $('.search').AutoComplete({
+            'data': ['#cpu','#分支预测','#缓存淘汰算法','#bloom filter','#堆','#堆排序','#lower_bound','#upper_bound','#查找','#旋转数组','#非递归遍历','#查找第k大数','#go','#channel','#error','#select','#nil','#gdb','#接收者','#常用命令','#redis','#TCP/IP','#TCP_NODELAY','#延迟ACK','#docker compose','#集群搭建','#负载均衡','#缓存经典问题','#读写分离、垂直拆分、水平拆分、分库分表','#多机房','#多活','#微信','#红包','#RPC','#单链表','#环','#线程数','#单点','#可用性','#性能','#高可用','#长连接','#gperftools','#CPU profile','#内存','#heap profile','#sar','#CPU','#IO','#perf',],
+            'itemHeight': 20,
+            'width': 418
+        }).AutoComplete('show');
+    })
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $(".post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+        $("input[name=pay]").on("click", function () {
+            if($("input[name=pay]:checked").val()=="weixin"){
+                $(".shang_box .shang_payimg .pay_img").addClass("weixin_img");
+            } else {
+                $(".shang_box .shang_payimg .pay_img").removeClass("weixin_img");
+            }
+        })
+        
+
+        /*高亮代码块行号*/
+        
+        $('pre code').each(function(){
+            var lines = $(this).text().split('\n').length - 1, widther='';
+            if (lines>99) {
+                widther = 'widther'
+            }
+            var $numbering = $('<ul/>').addClass('pre-numbering ' + widther).attr("unselectable","on");
+            $(this).addClass('has-numbering ' + widther)
+                    .parent()
+                    .append($numbering);
+            for(var i=1;i<=lines;i++){
+                $numbering.append($('<li/>').text(i));
+            }
+        });
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+    function dashangToggle() {
+        $(".shang_box").fadeToggle();
+        $(".hide_box").fadeToggle();
+    }
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<style>
+    pre{
+        position: relative;
+        margin-bottom: 24px;
+        border-radius: 10px;
+        border: 1px solid #e2dede;
+        background: #FFF;
+        overflow: hidden;
+    }
+    code.has-numbering{
+        margin-left: 30px;
+    }
+    code.has-numbering.widther{
+        margin-left: 35px;
+    }
+    .pre-numbering{
+        margin: 0px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        padding: 0.5em 3px 0.7em 5px;
+        border-right: 1px solid #C3CCD0;
+        text-align: right;
+        color: #AAA;
+        background-color: #fafafa;
+    }
+    .pre-numbering.widther {
+        width: 35px;
+    }
+</style>
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+        .nav .hide-list.fullscreen {
+            left: 492px
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+    .post .pjax article .article-entry>ol, .post .pjax article .article-entry>ul, .post .pjax article>ol, .post .pjax article>ul{
+        border: #e2dede solid 1px;
+        border-radius: 10px;
+        padding: 10px 32px 10px 56px;
+    }
+    .post .pjax article .article-entry li>ol, .post .pjax article .article-entry li>ul,.post .pjax article li>ol, .post .pjax article li>ul{
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .post .pjax article .article-entry>ol>li, .post .pjax article .article-entry>ul>li,.post .pjax article>ol>li, .post .pjax article>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    .post .pjax article .article-entry li>ol>li, .post .pjax article .article-entry li>ul>li,.post .pjax article li>ol>li, .post .pjax article li>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+    .nav-right:before {
+        content: ' ';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.3;
+        background: url("https://i.loli.net/2019/07/22/5d3521411f3f169375.png");
+        background-repeat: no-repeat;
+        background-position: 50% 0;
+        -ms-background-size: cover;
+        -o-background-size: cover;
+        -moz-background-size: cover;
+        -webkit-background-size: cover;
+        background-size: cover;
+    }
+    
+
+    
+</style>
+
+
+
+
+
+
+<div class="mobile-menus-out" >
+
+</div>
+<div class="mobile-menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+</div>
+
+
+</html>

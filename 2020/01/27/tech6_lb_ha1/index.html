@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  <title>负载均衡和高可用介绍 | Hexo</title>
+  <meta name="keywords" content=" 负载均衡 , 高可用 ">
+  <meta name="description" content="负载均衡和高可用介绍 | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="keywords" content="缓存淘汰算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta property="og:url" content="http://melonshell.github.io/2020/02/07/ds_cache_eli/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce4.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce5.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce2.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce3.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce6.png">
+<meta property="og:updated_time" content="2020-02-07T14:47:40.476Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta name="twitter:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="twitter:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.0.1" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.0.1" rel="stylesheet">
+
+<link href="//cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet">
+<link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="/js/jquery.autocomplete.min.js?v=1.0.1"></script>
+
+<script src="//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script src="/js/iconfont.js?v=1.0.1"></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="false">
+  <input class="theme_blog_path" value>
+</div>
+
+<body>
+<!-- hexo-inject:begin --><!-- hexo-inject:end --><aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>melonshell</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="github" href="https://github.com/melonshell" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="email" href="mailto:yj.mapple@gmail.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=466243859&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+</div>
+
+
+
+<a class="more-menus">更多菜单</a>
+
+
+<ul>
+    <li><div class="all active">全部文章<small>(42)</small></div></li>
+    
+        
+            
+            <li><div data-rel="性能分析">性能分析<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="积累收集">积累收集<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="docker">docker<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="数据结构与算法">数据结构与算法<small>(8)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="go语言">go语言<small>(10)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="Redis">Redis<small>(2)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="TCP/IP系列">TCP/IP系列<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="技术文章阅读">技术文章阅读<small>(11)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="工具"><i class="fold iconfont icon-right"></i>工具<small>(4)</small></div>
+                
+                    <ul class="sub hide">
+                        
+                        <li><div data-rel="性能">性能<small>(4)</small></div>
+                            
+                        </li>
+                            
+                    </ul>
+                
+            </li>
+            
+        
+    
+        
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+    </div>
+    <div><a class="about  site_url"  href="/about">关于</a></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="42">
+<input type="hidden" id="yelog_site_word_count" value="78.2k">
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        友情链接
+        <i class="back-title-list"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <form onkeydown="if(event.keyCode==13){return false;}">
+        <input class="search" type="text" placeholder="Search..." autocomplete="off"id="local-search-input" >
+        <i class="cross"></i>
+        <span>
+            <label for="tagswitch">Tags:</label>
+            <input id="tagswitch" type="checkbox" style="display: none" />
+            <i id="tagsWitchIcon"></i>
+        </span>
+    </form>
+    <div class="tags-list">
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">cpu</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">分支预测</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存淘汰算法</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">bloom filter</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">堆</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">堆排序</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">lower_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">upper_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">查找</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">旋转数组</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">非递归遍历</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">查找第k大数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">go</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">channel</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">error</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">select</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">nil</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">gdb</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">接收者</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">常用命令</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">redis</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP/IP</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP_NODELAY</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">延迟ACK</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">docker compose</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">集群搭建</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">负载均衡</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存经典问题</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">多机房</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多活</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">微信</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">红包</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">RPC</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">单链表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">环</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">线程数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">单点</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">可用性</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">性能</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">高可用</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">长连接</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">gperftools</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">CPU profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">内存</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">heap profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">sar</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">CPU</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">IO</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">perf</a>
+    </li>
+    
+    <div class="clearfix"></div>
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="性能分析 "
+           href="/2019/10/10/CPU-branch-prediction/"
+           data-tag="cpu,分支预测"
+           data-author="" >
+            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/29/comm-article/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="精品文章">精品文章</span>
+            <span class="post-date" title="2019-10-29 23:00:17">2019/10/29</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/10/comm-url/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用链接">常用链接</span>
+            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/17/comm-tool/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用工具">常用工具</span>
+            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+        </a>
+        
+        <a  class="C/C++ "
+           href="/2020/01/03/cpp-basic/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="基础知识">基础知识</span>
+            <span class="post-date" title="2020-01-03 19:07:13">2020/01/03</span>
+        </a>
+        
+        <a  class="docker "
+           href="/2019/11/26/docker/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用命令">常用命令</span>
+            <span class="post-date" title="2019-11-26 16:13:27">2019/11/26</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/02/07/ds_cache_eli/"
+           data-tag="缓存淘汰算法"
+           data-author="" >
+            <span class="post-title" title="常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU">常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU</span>
+            <span class="post-date" title="2020-02-07 18:48:19">2020/02/07</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/31/ds_bloomfilter/"
+           data-tag="bloom filter"
+           data-author="" >
+            <span class="post-title" title="海量数据处理之Bloom Filter">海量数据处理之Bloom Filter</span>
+            <span class="post-date" title="2020-01-31 18:11:25">2020/01/31</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/19/ds_heap_sort/"
+           data-tag="堆,堆排序"
+           data-author="" >
+            <span class="post-title" title="堆和堆排序">堆和堆排序</span>
+            <span class="post-date" title="2020-01-19 18:58:57">2020/01/19</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/18/ds_lower_upper_bound/"
+           data-tag="lower_bound,upper_bound,查找"
+           data-author="" >
+            <span class="post-title" title="lower_bound和upper_bound算法">lower_bound和upper_bound算法</span>
+            <span class="post-date" title="2020-01-18 23:24:13">2020/01/18</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2019/12/25/ds_rotated_array_search/"
+           data-tag="查找,旋转数组"
+           data-author="" >
+            <span class="post-title" title="旋转数组查找">旋转数组查找</span>
+            <span class="post-date" title="2019-12-25 16:11:03">2019/12/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/29/ds_traverse_tree/"
+           data-tag="非递归遍历"
+           data-author="" >
+            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
+            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/20/ds_select_Kth/"
+           data-tag="查找第k大数"
+           data-author="" >
+            <span class="post-title" title="select问题">select问题</span>
+            <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/16/go1/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go环境搭建">go环境搭建</span>
+            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/17/go2/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go常用命令">go常用命令</span>
+            <span class="post-date" title="2019-09-17 22:46:33">2019/09/17</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/07/go10_channel/"
+           data-tag="go,channel"
+           data-author="" >
+            <span class="post-title" title="go语言之channel">go语言之channel</span>
+            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/25/go3/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
+            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/03/go4/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
+            <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/09/go7_error/"
+           data-tag="go,error"
+           data-author="" >
+            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
+            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/05/go9_select/"
+           data-tag="go,select"
+           data-author="" >
+            <span class="post-title" title="go语言之select">go语言之select</span>
+            <span class="post-date" title="2019-12-05 16:45:42">2019/12/05</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/13/go5_nil/"
+           data-tag="go,nil"
+           data-author="" >
+            <span class="post-title" title="go之nil">go之nil</span>
+            <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/20/go6_gdb/"
+           data-tag="go,gdb"
+           data-author="" >
+            <span class="post-title" title="gdb调试go">gdb调试go</span>
+            <span class="post-date" title="2019-10-20 09:07:31">2019/10/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/21/go8_receiver/"
+           data-tag="go,接收者"
+           data-author="" >
+            <span class="post-title" title="go语言之指针和值接收者">go语言之指针和值接收者</span>
+            <span class="post-date" title="2019-11-21 00:28:31">2019/11/21</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/02/05/redis0_cmd/"
+           data-tag="常用命令,redis"
+           data-author="" >
+            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
+            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
+        </a>
+        
+        <a  class="TCP/IP系列 "
+           href="/2019/11/23/tcp_nodelay_delayed_ack/"
+           data-tag="TCP/IP,TCP_NODELAY,延迟ACK"
+           data-author="" >
+            <span class="post-title" title="TCP_NODELAY和延迟ACK">TCP_NODELAY和延迟ACK</span>
+            <span class="post-date" title="2019-11-23 11:01:13">2019/11/23</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2019/12/29/redis1_build_cluster/"
+           data-tag="redis,docker compose,集群搭建"
+           data-author="" >
+            <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
+            <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/02/tech10_ha/"
+           data-tag="负载均衡"
+           data-author="" >
+            <span class="post-title" title="负载均衡知识总结">负载均衡知识总结</span>
+            <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/05/tech11_cache1/"
+           data-tag="缓存经典问题"
+           data-author="" >
+            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
+            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/22/tech1_db_split/"
+           data-tag="读写分离、垂直拆分、水平拆分、分库分表"
+           data-author="" >
+            <span class="post-title" title="读写分离、垂直拆分、水平拆分、分库分表">读写分离、垂直拆分、水平拆分、分库分表</span>
+            <span class="post-date" title="2020-01-22 17:03:33">2020/01/22</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/24/tech3_multi_room_living/"
+           data-tag="多机房,多活"
+           data-author="" >
+            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
+            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/23/tech2_wx_red_packet/"
+           data-tag="微信,红包"
+           data-author="" >
+            <span class="post-title" title="微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑">微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑</span>
+            <span class="post-date" title="2020-01-23 17:55:26">2020/01/23</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/25/tech4_rpc/"
+           data-tag="RPC"
+           data-author="" >
+            <span class="post-title" title="RPC client异步收发核心细节">RPC client异步收发核心细节</span>
+            <span class="post-date" title="2020-01-25 12:18:12">2020/01/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/15/ds_link_list_circle/"
+           data-tag="单链表,环"
+           data-author="" >
+            <span class="post-title" title="判断单链表是否有环">判断单链表是否有环</span>
+            <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/26/tech5_thread_num/"
+           data-tag="线程数"
+           data-author="" >
+            <span class="post-title" title="线程数究竟设置多少合理？">线程数究竟设置多少合理？</span>
+            <span class="post-date" title="2020-01-26 16:32:07">2020/01/26</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/28/tech7_single_ha_pf/"
+           data-tag="单点,可用性,性能"
+           data-author="" >
+            <span class="post-title" title="单点系统架构的可用性和性能优化">单点系统架构的可用性和性能优化</span>
+            <span class="post-date" title="2020-01-28 09:48:07">2020/01/28</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/29/tech8_ha/"
+           data-tag="高可用"
+           data-author="" >
+            <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
+            <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/30/tech9_58pc/"
+           data-tag="长连接"
+           data-author="" >
+            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
+            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/10/tool2_gperftools/"
+           data-tag="gperftools,CPU profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之CPU Profile">gperftools之CPU Profile</span>
+            <span class="post-date" title="2019-09-10 22:55:47">2019/09/10</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/14/tool3_gperftools2/"
+           data-tag="gperftools,内存,heap profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之heap profile">gperftools之heap profile</span>
+            <span class="post-date" title="2019-09-14 23:36:27">2019/09/14</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/30/tool4_sar/"
+           data-tag="内存,sar,CPU,IO"
+           data-author="" >
+            <span class="post-title" title="sar查看内存、CPU、IO">sar查看内存、CPU、IO</span>
+            <span class="post-date" title="2019-10-30 08:02:03">2019/10/30</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/27/tech6_lb_ha1/"
+           data-tag="负载均衡,高可用"
+           data-author="" >
+            <span class="post-title" title="负载均衡和高可用介绍">负载均衡和高可用介绍</span>
+            <span class="post-date" title="2020-01-27 23:25:02">2020/01/27</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/09/tool1_perf/"
+           data-tag="perf"
+           data-author="" >
+            <span class="post-title" title="perf性能分析">perf性能分析</span>
+            <span class="post-date" title="2019-10-09 07:54:19">2019/10/09</span>
+        </a>
+        
+    </nav>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div class="post">
+    <div class="pjax">
+        <article id="post-tech6_lb_ha1" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">负载均衡和高可用介绍</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            
+                <a href="javascript:" data-rel="技术文章阅读">技术文章阅读</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="javascript:" class="color5">负载均衡</a>
+            
+            <a href="javascript:" class="color4">高可用</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+        创建时间:<time class="date" title='更新时间: 2020-01-27 21:54:00'>2020-01-27 23:25</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        <span>字数:6.4k</span>
+        
+        
+        <span id="busuanzi_container_page_pv">
+            阅读:<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+        <span class="top-comment" title="跳转至评论区">
+            <a href="#comments">
+                评论:<span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </a>
+        </span>
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-LVS"><span class="toc-text">1 LVS</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-LVS体系结构"><span class="toc-text">1.1 LVS体系结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-LVS负载均衡机制"><span class="toc-text">1.2 LVS负载均衡机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-1-NAT模式：网络地址转换"><span class="toc-text">1.2.1 NAT模式：网络地址转换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-2-IP-TUN模式"><span class="toc-text">1.2.2 IP TUN模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-3-DR模式：直接路由"><span class="toc-text">1.2.3 DR模式：直接路由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-4-FULLNAT模式"><span class="toc-text">1.2.4 FULLNAT模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-5-LVS的优点"><span class="toc-text">1.2.5 LVS的优点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-6-LVS的缺点"><span class="toc-text">1.2.6 LVS的缺点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-7-四种模式比较"><span class="toc-text">1.2.7 四种模式比较</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-nginx"><span class="toc-text">2 nginx</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-nginx架构"><span class="toc-text">2.1 nginx架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-nginx负载均衡"><span class="toc-text">2.2 nginx负载均衡</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-nginx优点"><span class="toc-text">2.3 nginx优点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-nginx缺点"><span class="toc-text">2.4 nginx缺点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-HAProxy"><span class="toc-text">3 HAProxy</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-keepalived和heartbeat"><span class="toc-text">4 keepalived和heartbeat</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-工作原理"><span class="toc-text">4.1 工作原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-2-IP地址接管和故障转移"><span class="toc-text">4.2 IP地址接管和故障转移</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-3-常用配置"><span class="toc-text">4.3 常用配置</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-为什么会同时使用LVS-Nginx负载均衡？"><span class="toc-text">5 为什么会同时使用LVS+Nginx负载均衡？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#6-为什么MySQL需要LVS-Keepalived？"><span class="toc-text">6 为什么MySQL需要LVS+Keepalived？</span></a></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>目前线上用的负载均衡器硬件有F5，BIG-IP，软件有LVS，Nginx和HAProxy，高可用软件有Heartbeat，Keepalived，成熟的框架有LVS+Keepalived，Nginx+Keepalived，HAProxy+Keepalived以及DRBD+Heartbeat。<br>  <img src="/pic/tech6_lb_ha1.png" alt="互联网一般架构"></p>
+<p>实际应用中，在Web服务器集群之前有一台负载均衡服务器，负载均衡设备的任务就是作为Web服务器流量的入口，挑选最合适的一台Web服务器，将客户端的请求转发给它处理，实现客户端到真实服务端的透明转发；LVS、Nginx、HAProxy是目前使用最广泛的三种负载均衡软件。</p>
+<p>一般对负载均衡的使用是随着网站规模的提升根据不同的阶段来使用不同的技术：如果是中小型的Web应用，比如日PV小于1000万，用Nginx就完全可以；如果机器不少，可以用DNS轮询，LVS所耗费的机器还是比较多的；大型网站或重要的服务，且服务器比较多时，可以考虑用LVS。</p>
+<p>目前关于网站架构一般比较流行的架构方案：Web前端采用Nginx/HAProxy+Keepalived作负载均衡器；后端采用MySQL数据库一主多从和读写分离，采用LVS+Keepalived的架构。</p>
+<h1 id="1-LVS"><a href="#1-LVS" class="headerlink" title="1 LVS"></a>1 LVS</h1><p>LVS是Linux Virtual Server的简称，即Linux虚拟服务器。现在LVS已经是Linux标准内核的一部分，从Linux2.4内核以后，已经完全内置了LVS的各个功能模块，无需给内核打任何补丁就可以直接使用LVS提供的各种功能。<br>DS：Director Server，指的是前端负载均衡器节点<br>RS：Real Server，后端真实的工作服务器<br>VIP：向外部直接面向用户请求，作为用户请求的目标IP地址<br>DIP：Director Server IP，主要用于和内部主机通讯的IP地址<br>RIP：Real Server IP，后端服务器的IP地址<br>CIP：Client IP，访问客户端的IP地址</p>
+<h2 id="1-1-LVS体系结构"><a href="#1-1-LVS体系结构" class="headerlink" title="1.1 LVS体系结构"></a>1.1 LVS体系结构</h2><p>  <img src="/pic/tech6_lb_ha2.png" alt="LVS体系结构"><br>LVS架设的服务器集群系统由三个部分组成：<br>(1) 最前端的负载均衡层，用Load Balancer表示；<br>(2) 中间的服务器集群层，用Server Array表示；<br>(3) 最底端的数据共享存储层，用Shared Storage表示；</p>
+<h2 id="1-2-LVS负载均衡机制"><a href="#1-2-LVS负载均衡机制" class="headerlink" title="1.2 LVS负载均衡机制"></a>1.2 LVS负载均衡机制</h2><p>LVS不像HAProxy等七层软负载均衡面向的是HTTP包，所以七层负载可以做URL解析等工作，LVS无法完成，因为LVS是四层负载均衡，就是说建立在OSI模型的第四层——传输层之上，传输层上有我们熟悉的TCP/UDP，LVS支持TCP/UDP的负载均衡。因为LVS是四层负载均衡，所以它相对于其它高层负载均衡，比如DNS域名轮询解析、应用层负载的调度、客户端的调度等，效率较高。</p>
+<p>所谓四层负载均衡，即主要通过报文中的目标地址和端口；七层负载均衡，也称为内容交换，即主要通过报文中的应用层内容。<br>LVS的转发主要通过修改IP地址(NAT模式，分为SNAT源地址修改和DNAT目标地址修改、修改目标MAC(DR模式)来实现。</p>
+<h3 id="1-2-1-NAT模式：网络地址转换"><a href="#1-2-1-NAT模式：网络地址转换" class="headerlink" title="1.2.1 NAT模式：网络地址转换"></a>1.2.1 NAT模式：网络地址转换</h3><p>NAT(Network Address Translation)是一种外网和内网地址映射的技术。NAT模式下，网络数据报的进出都要经过LVS的处理。LVS 需要作为RS(真实服务器)的网关。</p>
+<p>当包到达LVS时，LVS做目标地址转换(DNAT)，将目标IP改为RS的IP，RS接收到包以后，和客户端直接发给它的一样。RS处理完，返回响应时，源IP是RS的IP，目标IP是客户端的IP，这时RS的包通过网关(LVS)中转，LVS会做源地址转换(SNAT)，将包的源地址改为VIP，这样，客户端看起来这个包就是LVS直接返回给它。<br>  <img src="/pic/tech6_lb_ha3.png" alt="LVS NAT模式"><br>  <img src="/pic/tech6_lb_ha7.png" alt="LVS NAT模式"><br>用户请求LVS到达director，director将请求的报文的目的IP改为RIP，同时将报文的目标端口也改为realserver的相应端口，最后将报文发送到realserver上，realserver将数据返回给director，director再把数据发送给用户；<br><strong>NAT特性：</strong><br>NAT模式修改的是目的ip，直接走的是switch不需要修改mac地址，所以VIP和RIP不需要在同一个网段内；<br>NAT的包进出都需要经过LVS，所以LVS可能会成为一个系统的瓶颈问题；</p>
+<h3 id="1-2-2-IP-TUN模式"><a href="#1-2-2-IP-TUN模式" class="headerlink" title="1.2.2 IP TUN模式"></a>1.2.2 IP TUN模式</h3><p>  <img src="/pic/tech6_lb_ha5.png" alt="LVS IP TUN模式"><br>用户请求LVS到达director，director通过IP-TUN加密技术将请求报文的包封装到一个新的IP包里面，目的IP为VIP(不变)，然后director将报文发送到realserver，realserver基于IP-TUN解密，然后解析出来包的目的IP为VIP，检测网卡是否绑定了VIP，绑定了就处理这个包，如果在同一个网段，将请求直接返回给用户，否则通过网关返回给用户；如果没有绑定VIP就直接丢掉这个包；<br><strong>IP TUN特性：</strong></p>
+<ul>
+<li>TUNNEL必须在有所的realserver上绑定VIP；</li>
+<li>realserver直接把包发给client；</li>
+<li>隧道模式运维起来比较难，一般不用；</li>
+</ul>
+<h3 id="1-2-3-DR模式：直接路由"><a href="#1-2-3-DR模式：直接路由" class="headerlink" title="1.2.3 DR模式：直接路由"></a>1.2.3 DR模式：直接路由</h3><p>DR模式下需要LVS和RS集群绑定同一个VIP(RS通过将VIP绑定在loopback实现)，但与NAT的不同点在于：请求由LVS接收，由真实提供服务的服务器(RealServer，RS)直接返回给用户，返回的时候不经过LVS。</p>
+<p>请求过来时，LVS只需要将网络帧的MAC地址修改为某一台RS的MAC，该包就会被转发到相应的RS处理，注意此时的源IP和目标IP都没变，RS收到LVS转发来的包时，链路层发现MAC是自己的，到上面的网络层，发现IP也是自己的，于是这个包被合法地接受，RS感知不到前面有LVS的存在，而当RS返回响应时，只要直接向源IP(即用户的IP)返回即可，不再经过LVS。<br>  <img src="/pic/tech6_lb_ha4.png" alt="LVS DR模式"><br>DR负载均衡模式数据分发过程中不修改IP地址，只修改mac地址，由于实际处理请求的真实物理IP地址和数据请求目的IP地址一致，所以不需要通过负载均衡服务器进行地址转换，可将响应数据包直接返回给用户浏览器，避免负载均衡服务器网卡带宽成为瓶颈。因此，DR模式具有较好的性能，也是目前大型网站使用最广泛的一种负载均衡手段。<br>  <img src="/pic/tech6_lb_ha8.png" alt="LVS DR模式"><br>用户请求LVS到达director，director将请求的报文的目的MAC地址改为后端的realserver的MAC地址，目的IP为VIP(不变)，源IP为client IP地址(不变)，然后director将报文发送到realserver，realserver检测到目的地址为自己本地的VIP，如果在同一网段，将请求直接返回给用户，如果用户跟realserver不在同一个网段，则需要通过网关返回给用户；<br><strong>DR特性：</strong></p>
+<ul>
+<li>前端路由将目标地址为VIP的报文发给Director Server；</li>
+<li>RS跟Director Server必须有一个网卡在同一个物理网络中；</li>
+<li>所有的请求报文经由Director Server，但响应报文必须不经过Director Server；</li>
+<li>所有的real server机器上都有VIP地址</li>
+</ul>
+<h3 id="1-2-4-FULLNAT模式"><a href="#1-2-4-FULLNAT模式" class="headerlink" title="1.2.4 FULLNAT模式"></a>1.2.4 FULLNAT模式</h3><p>  <img src="/pic/tech6_lb_ha6.png" alt="LVS FULLNAT模式"><br><strong>FULLNAT特性：</strong></p>
+<ul>
+<li>FULLNAT模式也不需要DIP和RIP在同一网段；</li>
+<li>FULLNAT和NAT相比的话：会保证RS的回包一定可到达LVS；</li>
+<li>FULLNAT需要更新源IP，所以性能正常比NAT模式下降10%；</li>
+</ul>
+<h3 id="1-2-5-LVS的优点"><a href="#1-2-5-LVS的优点" class="headerlink" title="1.2.5 LVS的优点"></a>1.2.5 LVS的优点</h3><ul>
+<li>抗负载能力强，工作在传输层上仅作分发，没有流量的产生，这个特点也决定了它在负载均衡软件里的性能最强，对内存和CPU资源消耗比较低；</li>
+<li>配置性比较低，这是一个缺点也是一个优点，因为没有可太多配置的东西，所以并不需要太多接触，大大减少了人为出错的几率；</li>
+<li>工作稳定，因为其本身抗负载能力很强，自身有完整的双机热备方案，如LVS+Keepalived；</li>
+<li>无流量，LVS只分发请求，而流量并不从它本身出去，这点保证了负载均衡器IO的性能不会受到大流量的影响；</li>
+<li>应用范围比较广，因为LVS工作在传输层，所以它几乎可以对所有应用做负载均衡，包括http、数据库、在线聊天室等；</li>
+</ul>
+<h3 id="1-2-6-LVS的缺点"><a href="#1-2-6-LVS的缺点" class="headerlink" title="1.2.6 LVS的缺点"></a>1.2.6 LVS的缺点</h3><ul>
+<li>软件本身不支持正则表达式处理，不能做动静分离；而现在许多网站在这方面都有较强的需求，这个是Nginx、HAProxy+Keepalived的优势所在；</li>
+<li>如果网站应用比较庞大，LVS/DR+Keepalived实施起来比较复杂，相对而言Nginx/HAProxy+Keepalived较为简单；</li>
+</ul>
+<h3 id="1-2-7-四种模式比较"><a href="#1-2-7-四种模式比较" class="headerlink" title="1.2.7 四种模式比较"></a>1.2.7 四种模式比较</h3><p>(1) 是否需要VIP和realserver在同一网段？<br>DR模式因为只修改包的MAC地址，需要通过ARP广播找到realserver，所以VIP和realserver必须在同一个网段，也就是说DR模式需要先确认这个IP是否只能挂在这个LVS下面；其他模式因为都会修改目的地址为realserver的IP地址，所以不需要在同一个网段内；<br>(2) 是否需要在realserver上绑定VIP？<br>realserver在收到包之后会判断目的地址是否是自己的IP；<br>DR模式的目的地址没有修改，还是VIP，所以需要在realserver上绑定VIP；<br>IP TUN模式只是对包重新包装了一层，realserver解析后的包的IP仍然是VIP，所以也需要在realserver上绑定VIP；<br>(3) 性能比较<br>DR模式、IP TUN模式都是在包进入的时候经过LVS，在包返回的时候直接返回给client，所以二者的性能比NAT高；<br>但TUN模式更加复杂，所以性能不如DR；<br>FULLNAT模式不仅更换目的IP还更换了源IP，所以性能比NAT下降10%；<br>性能比较：DR &gt; TUN &gt; NAT &gt; FULLNAT</p>
+<h1 id="2-nginx"><a href="#2-nginx" class="headerlink" title="2 nginx"></a>2 nginx</h1><p>Nginx是一个强大的Web服务器软件，用于处理高并发的HTTP请求和作为反向代理服务器做负载均衡，具有高性能、轻量级、内存消耗少，强大的负载均衡能力等优势。<br>  <img src="/pic/tech6_lb_ha9.png" alt="nginx"></p>
+<h2 id="2-1-nginx架构"><a href="#2-1-nginx架构" class="headerlink" title="2.1 nginx架构"></a>2.1 nginx架构</h2><p>相对于传统基于进程或线程的模型(Apache就采用这种模型)在处理并发连接时会为每一个连接建立一个单独的进程或线程，且在网络输入/输出操作时阻塞，这将导致内存和CPU的大量消耗，因为新起一个单独的进程或线程需要准备新的运行时环境，包括堆和栈内存的分配，以及新的执行上下文，当然这些也会导致多余的CPU开销，最终会由于过多的上下文切换而导致服务器性能变差。</p>
+<p>Nginx的架构设计是采用模块化的、基于事件驱动、异步、单线程且非阻塞。Nginx大量使用多路复用和事件通知，Nginx启动以后，会在系统中以daemon方式在后台运行，其中包括一个master进程，n(n&gt;=1)个worker进程，所有的进程都是单线程(即只有一个主线程)，且进程间通信主要使用共享内存的方式。其中master进程用于接收外部信号，并给worker进程发送信号，同时监控worker进程的工作状态，worker进程则是外部请求真正的处理者，每个worker相互独立且平等的竞争来自客户端的请求，请求只能在一个worker进程中被处理，且一个worker进程只有一个主线程，所以同时只能处理一个请求。<br>  <img src="/pic/tech6_lb_ha10.png" alt="nginx架构"></p>
+<h2 id="2-2-nginx负载均衡"><a href="#2-2-nginx负载均衡" class="headerlink" title="2.2 nginx负载均衡"></a>2.2 nginx负载均衡</h2><p>Nginx负载均衡主要是针对七层网络通信模型中的第七层应用层的http、https。</p>
+<p>Nginx是以反向代理的方式进行负载均衡的，反向代理方式是指以代理服务器来接收Internet上的连接请求，然后将请求转发给内部网络服务器，并将服务器的结果返回给请求客户端，此时代理服务器对外就表现为一个服务器。Nginx实现负载均衡的分配策略有很多，Nginx的upstream目前支持以下几种方式：</p>
+<ul>
+<li>轮询(默认)：每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务器down掉，能自动剔除；</li>
+<li>weight：指定轮询几率，weight和访问比率成正比，用于后端服务器性能不均的情况；</li>
+<li>ip_hash：每个请求按访问ip的hash结果分配，这样每个客户端固定访问一台后端服务器，可以解决session的问题；</li>
+<li>fair(第三方)：按后端服务器的响应时间来分配请求，响应时间短的优先分配；</li>
+<li>url_hash(第三方)：按访问url的hash结果来分配请求，使每个url定向到同一台后端服务器，后端服务器为缓存时比较有效；</li>
+</ul>
+<h2 id="2-3-nginx优点"><a href="#2-3-nginx优点" class="headerlink" title="2.3 nginx优点"></a>2.3 nginx优点</h2><ul>
+<li>跨平台：Nginx可以在大多数Unix like OS编译运行，而且也有Windows的移植版本；</li>
+<li>配置简单：非常容易上手，配置风格跟程序开发一样；</li>
+<li>非阻塞、高并发连接：官方测试能够支撑5万并发连接，实际生产环境中跑到2～3万并发连接数；</li>
+<li>事件驱动：通信机制采用epoll模型，支持更大的并发连接；</li>
+<li>Master/Worker结构：一个master进程，生成一个或多个worker进程；</li>
+<li>内存消耗小：处理大并发的请求内存消耗非常小，在3万并发连接下，开启的10个Nginx进程才消耗150M内存(15M*10=150M)；</li>
+<li>内置的健康检查功能：如果Nginx代理的后端某台Web服务器宕机了，不会影响前端访问；</li>
+<li>节省带宽：支持GZIP压缩，可以添加浏览器本地缓存的Header头；</li>
+<li>稳定性高：用于反向代理，宕机的概率小；</li>
+</ul>
+<h2 id="2-4-nginx缺点"><a href="#2-4-nginx缺点" class="headerlink" title="2.4 nginx缺点"></a>2.4 nginx缺点</h2><ul>
+<li>Nginx仅支持http、https和Email协议，适用范围小；</li>
+<li>对后端服务器的健康检查，只支持通过端口来检测，不支持通过url来检测；不支持Session的直接保持，但能通过ip_hash来解决；</li>
+</ul>
+<h1 id="3-HAProxy"><a href="#3-HAProxy" class="headerlink" title="3 HAProxy"></a>3 HAProxy</h1><p>HAProxy支持两种代理模式TCP(四层)和HTTP(七层)，也支持虚拟主机；<br>HAProxy支持Session保持，Cookie引导，同时支持通过获取指定的url来检测后端服务器的状态；HAProxy跟LVS类似，本身只是一款负载均衡软件，单纯从效率上来讲HAProxy比Nginx有更出色的负载均衡速度，在并发处理上也优于Nginx；<br>HAProxy支持TCP协议的负载均衡转发，可以对后端MySQL读进行负载均衡；对后端MySQL节点检测和主从做负载均衡，可以用LVS+Keepalived。<br>HAProxy负载均衡策略非常多：Round-robin(轮询)，Weight-round-robin(带权轮询)，source(原地址保持)，RI(请求URL)，rdp-cookie(根据cookie)。</p>
+<h1 id="4-keepalived和heartbeat"><a href="#4-keepalived和heartbeat" class="headerlink" title="4 keepalived和heartbeat"></a>4 keepalived和heartbeat</h1><p>两款流行的高可用开源方案：Keepalived和Heartbeat，将资源(ip以及程序服务等)从一台已经故障的机器快速转移到另一台正常的机器上继续提供服务，称之为高可用服务。</p>
+<p>heartbeat和keepalived有很多相同之处，但是也有区别：<br>(1) Keepalived使用简单：从安装、配置、使用、维护等角度上对比，Keepalived都比Heartbeat要简单；<br>(2) Heartbeat功能更强大：Heartbeat虽然复杂，但功能更强大，配套工具更全，适合做大型集群管理，而Keepalived主要用于集群切换，基本没有管理功能；<br>(3) 协议不同：Keepalived使用VRRP即虚拟路由冗余协议(Virtual Router Redundancy Protocol，简称VRRP，思科交换就是使用这个协议做双机)进行通信和选举；Heartbeat使用心跳(IBM POWER小型机就是用心跳线做双机)进行通信和选举，Heartbeat通过UDP协议或串口通信。</p>
+<p><strong>应用场景</strong><br>Heartbeat是基于主机或网络服务的高可用方式；<br>keepalived的目的是模拟路由器的双机；<br>heartbeat的目的是用户service的双机<br>lvs的高可用建议用keepavlived；<br>业务的高可用建议heartbeat；</p>
+<h2 id="4-1-工作原理"><a href="#4-1-工作原理" class="headerlink" title="4.1 工作原理"></a>4.1 工作原理</h2><p><strong>主备模式</strong> 一台heartbeat服务器作为主服务器，另一台自动成为热备服务器，在热备服务器上面配置heartbeat守护程序来监听来自主服务器的心跳信息，如果在规定时间内，无法监听到心跳信息，那么就启动故障转移，取得主服务器上的相关资源的所有权，接替主服务器继续不间断的提供服务，从而达到资源和服务高可用的目的。<br><strong>主主模式</strong> heartbeat还支持主主模式，即两台服务器互为主备，一般故障切换时间在5~20s之间。</p>
+<p>(1) 服务器宕机<br>a. heartbeat软件故障<br>b. 心跳连接线故障<br>c. 服务故障不会导致切换，可以通过服务宕机把heartbeat服务停掉；</p>
+<p>(2) 两台heartbeat服务之间通信:<br>a. 串行电缆，服务器上装专门串口卡(距离不能太远，一般是上下机架位)<br>b. 交叉网线分别直连服务器的两块网卡<br>c. 通过交换机用网线连接(受交换机故障影响)</p>
+<p>(3) Heartbeat裂脑<br>两台服务器在一定时间内，无法相互检测到对方心跳而各自启动故障转移功能，取得资源和服务的所有权，会导致同一个IP在两端同时启动服务，存在两个相同的VIP，造成冲突的严重问题</p>
+<p>(4) 裂脑的原因<br>a. 心跳链路故障，导致无法正常通信<br>b. 开启了防火墙阻挡了心跳信息传输<br>c. 心跳网卡地址等配置不正确<br>d. 心跳方式，心跳广播冲突，软件bug</p>
+<p>(5) 防止裂脑方案<br>a. 同时使用串行电缆和以太网电缆连接，同时使用两条心跳线<br>b. 检测到裂脑时，强制关闭一个节点<br>c. 做好监控预警<br>d. 仲裁机制(确定让哪个节点接管服务)</p>
+<p>(6) 消息类型<br>a. 心跳消息(单播，广播或者多播)：150字节的数据包<br>b. 集群转换消息：ip-request，ip-request-rsp<br>c. 重传消息：rexmit-request</p>
+<h2 id="4-2-IP地址接管和故障转移"><a href="#4-2-IP地址接管和故障转移" class="headerlink" title="4.2 IP地址接管和故障转移"></a>4.2 IP地址接管和故障转移</h2><p>heartbeat通过ip地址接管和arp广播进行故障转移。<br>ARP广播：在主服务器故障时，备用节点接管资源后，会立即强制更新所有客户端本地的arp表(即清除客户端本地缓存的故障服务器的vip和mac地址的解析记录)，确保客户端和新的主服务器的对话，这里所说的客户端是和Heartbeat高可用服务器所在同一网络的客户机，并不是最终的互联网用户，这里的客户端机器是相对Heartbeat高可用服务器来说的；<br>实IP，又称为管理ip，一般指配置在物理网卡上面的ip，在负载均衡高可用环境中，管理IP是不对外提供访问服务的，仅仅作为管理服务器使用，如SSH可以通过这个进行服务连接管理；<br>VIP是虚拟ip，实际上就是eth0:X，x为0~255的任意数字，你可以在一个网卡上面绑定多个别名，VIP当主服务器故障时，可以自动漂移到备用服务器；</p>
+<h2 id="4-3-常用配置"><a href="#4-3-常用配置" class="headerlink" title="4.3 常用配置"></a>4.3 常用配置</h2><p>nginx + keepalived双主模式(双机互为主备)；<br>  <img src="/pic/tech6_lb_ha11.png" alt="nginx双主"><br>LVS + keepalived双主模式；<br>  <img src="/pic/tech6_lb_ha12.png" alt="LVS双主"><br>HAProxy + keepalived双主模式；<br>  <img src="/pic/tech6_lb_ha13.png" alt="HAProxy双主"><br> 这个架构中要实现的功能是：通过haproxy1服务器将<a href="http://www.zb.com的访问请求发送到webapp1和webapp2两台主机上，实现www.zb.com的负载均衡；通过haproxy2将img.zb.com的访问请求发送到webimg1和webimg2两台主机上，实现img.zb.com的负载均衡；同时，如果haproxy1或haproxy2任何一台服务器出现故障，都会将用户访问请求发送到另一台健康的负载均衡节点，进而继续保持两个网站的负载均衡。" target="_blank" rel="noopener">www.zb.com的访问请求发送到webapp1和webapp2两台主机上，实现www.zb.com的负载均衡；通过haproxy2将img.zb.com的访问请求发送到webimg1和webimg2两台主机上，实现img.zb.com的负载均衡；同时，如果haproxy1或haproxy2任何一台服务器出现故障，都会将用户访问请求发送到另一台健康的负载均衡节点，进而继续保持两个网站的负载均衡。</a><br>  <img src="/pic/tech6_lb_ha14.png" alt="HAProxy双主地址规划"><br>为了保证haproxy1和haproxy2服务器资源得到充分利用，这里对访问进行了分流操作：将<a href="http://www.zb.com的域名解析到10.0.0.40这个IP上，将img.zb.com域名解析到10.0.0.50这个IP上。" target="_blank" rel="noopener">www.zb.com的域名解析到10.0.0.40这个IP上，将img.zb.com域名解析到10.0.0.50这个IP上。</a></p>
+<h1 id="5-为什么会同时使用LVS-Nginx负载均衡？"><a href="#5-为什么会同时使用LVS-Nginx负载均衡？" class="headerlink" title="5 为什么会同时使用LVS+Nginx负载均衡？"></a>5 为什么会同时使用LVS+Nginx负载均衡？</h1><p>LVS是四层负载均衡，Nginx是七层负载均衡，四层是数据转发，没有&quot;请求&quot;的概念；</p>
+<p>从两者各自的优势来说：<br>nginx用来做http的反向代理，能够用upsteam实现http请求的多种方式的均衡转发，由于采用的是异步转发可以做到如果一个服务器请求失败，立即切换到其他服务器，直到请求成功或者最后一台服务器失败为止，这可以最大程度的提高系统的请求成功率。</p>
+<p>lvs采用的是同步请求转发策略，同步转发是在lvs服务器接收到请求之后，立即转发到一个后端服务器，由客户端直接和后端服务器建立连接；异步转发是nginx在保持客户端连接的同时，发起一个相同内容的新请求到后端，等后端返回结果后，由nginx返回给客户端。</p>
+<p>因此，当做为负载均衡服务器的nginx和lvs处理相同的请求时，所有的请求和响应流量都会经过nginx，但是使用lvs时，仅请求流量经过lvs的网络，响应流量由后端服务器的网络返回；故当后端服务器规模庞大时，nginx的网络带宽就成了一个巨大的瓶颈，但是仅仅使用lvs作为负载均衡的话，一旦后端接受到请求的服务器出了问题，那么这次请求就失败了，但如果在lvs的后端在添加一层nginx(多个)，每个nginx后端再有几台业务服务器，那么结合两者的优势，既能避免单nginx的流量集中瓶颈，又能避免单lvs请求成功率的问题。</p>
+<p>nginx处理静态文件；<br>nginx作为中间环节减小后端压力，以及做一些业务切换、分流、前置缓存的功能；</p>
+<p>  <img src="/pic/tech6_lb_ha15.png" alt="LVS+Nginx负载均衡组合"><br>一般流量大的网站，会有好几层负载均衡器，而不是只有一层，这些层可以按不同的维度去分类，比如按四层或七层协议，按硬件还是软件；</p>
+<p>负载均衡这个领域还是以高可用和性能为2个最重要因素，下面是在系统量级达到每小时上亿PV之后最被广泛使用的一种。理论上，利用第一步DNS的域名解析所带的负载均衡效果，只要复制多套LVS主备出来，绑上多个不同的虚IP，可以做到无限横向扩展，以支撑不断增长的流量<br>  <img src="/pic/tech6_lb_ha16.png" alt="LVS+Nginx负载均衡组合2"></p>
+<h1 id="6-为什么MySQL需要LVS-Keepalived？"><a href="#6-为什么MySQL需要LVS-Keepalived？" class="headerlink" title="6 为什么MySQL需要LVS+Keepalived？"></a>6 为什么MySQL需要LVS+Keepalived？</h1><p>MySQL复制(主主，主从)能在保证数据备份的同时，也能够做读写分离分摊系统压力，但是发生单点故障时，需要手动切换到另外一台主机。LVS和Keppalived可以设定一个VIP来实现统一访问入口，实现单点故障时VIP自动切换至另外一台主机达到高可用，同时LVS可以提供多种调度算法来实现负载均衡。</p>
+<p>在主主复制结构中，两台服务器上的任何一台数据库存发生了改变都会同步到另一台服务器上， 这个改变是基于sql语句的改变，如果删除系统数据库源文件或删除后新创建同名MYSQL表实现同步则无效。这样两台服务器互为主从，并且都能向外提供服务，因比使用主从复制具有更好的性能。理论上，双主只要数据不冲突就可以工作的很好，但实际情况中还是很容发生数据冲突，比如在同步完成之前，双方都修改同一条记录，因此在实际中最好不要让两边同时修改，即逻辑上仍按照主从的方式工作。借助keepalived这样的软件实现自动主从切换，工作时候仍然按照主从方式复制，并且只允许一台主节点写数据，这样就不会产生冲突，一旦主库出现问题可以自动切换。</p>
+<p>通常说的双机热备是指两台机器都在运行，但并不是两台机器同时提供服务。当提供服务的一台出现故障的时候，另外一台会马上自动接管并且提供服务，而且切换的时间非常短。MySQL双主复制，即互为Master-Slave(只有一个Master提供写操作)，可以实现数据库服务器的热备，但是一个Master宕机后不能实现动态切换，使用Keepalived，可以通过虚拟IP，实现双主对外的统一接口以及自动检查、失败切换机制，从而实现MySQL数据库的高可用方案。</p>
+<p>双主：Keepalived<br>读负载均衡：LVS + Keepalived</p>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至yj.mapple@gmail.com </span>
+    </div>
+</article>
+
+
+<p>
+    <a href="javascript:void(0)" class="dashang" onclick="dashangToggle()">赏</a>
+</p>
+
+
+<div class="article_copyright">
+    <p><span class="copy-title">文章标题:</span>负载均衡和高可用介绍</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">6.4k</span></p>
+    <p><span class="copy-title">本文作者:</span><a href="javascript:void(0)" title="melonshell">melonshell</a></p>
+    <p><span class="copy-title">发布时间:</span>2020-01-27, 23:25:02</p>
+    <p><span class="copy-title">最后更新:</span>2020-01-27, 21:54:00</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2020/01/27/tech6_lb_ha1/" title="负载均衡和高可用介绍">http://melonshell.github.io/2020/01/27/tech6_lb_ha1/</a>
+    <p>
+        <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+    </p>
+</div>
+
+
+
+    <div id="comments"></div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+
+<script type="text/javascript">
+    $.getScript('/js/gitalk.js', function () {
+        var gitalk = new Gitalk({
+            clientID: 'e97d9b9b791221194492',
+            clientSecret: 'c3930f83c344398e78fe43dff9bd0af7ce3024ab',
+            repo: 'melonshell.github.io',
+            owner: 'melonshell',
+            admin: ['melonshell'],
+            id: decodeURI(location.pathname),
+            distractionFreeMode: 'true',
+            language: 'zh-CN',
+            perPage: parseInt('10',10)
+        })
+        gitalk.render('comments')
+    })
+</script>
+
+
+
+
+    
+        <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<input type="hidden" id="MathJax-js"
+        value="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</input>
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry">©2019-2099 melonshell</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full"><span class="min "></span></button>
+<button class="post-toc-menu"><span class="post-toc-menu-icons"></span></button>
+<div class="post-toc"><span class="post-toc-title">目录</span>
+    <div class="post-toc-content">
+
+    </div>
+</div>
+<a class="" id="rocket" href="javascript:void(0)"></a>
+    </div>
+</div>
+<div class="acParent"></div>
+
+<div class="hide_box" onclick="dashangToggle()"></div>
+<div class="shang_box">
+    <a class="shang_close" href="javascript:void(0)" onclick="dashangToggle()">×</a>
+    <div class="shang_tit">
+        <p>喜欢就点赞,疼爱就打赏</p>
+    </div>
+    <div class="shang_payimg">
+        <div class="pay_img">
+            <img src="/img/alipay.jpg" class="alipay" title="扫码支持">
+            <img src="/img/weixin.jpg" class="weixin" title="扫码支持">
+        </div>
+    </div>
+    <div class="shang_payselect">
+        <span><label><input type="radio" name="pay" checked value="alipay">支付宝</label></span><span><label><input type="radio" name="pay" value="weixin">微信</label></span>
+    </div>
+</div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.0.1" ></script>
+
+<script src="/js/script.js?v=1.0.1" ></script>
+<script>
+    var img_resize = 'default';
+    /*作者、标签的自动补全*/
+    $(function () {
+        $('.search').AutoComplete({
+            'data': ['#cpu','#分支预测','#缓存淘汰算法','#bloom filter','#堆','#堆排序','#lower_bound','#upper_bound','#查找','#旋转数组','#非递归遍历','#查找第k大数','#go','#channel','#error','#select','#nil','#gdb','#接收者','#常用命令','#redis','#TCP/IP','#TCP_NODELAY','#延迟ACK','#docker compose','#集群搭建','#负载均衡','#缓存经典问题','#读写分离、垂直拆分、水平拆分、分库分表','#多机房','#多活','#微信','#红包','#RPC','#单链表','#环','#线程数','#单点','#可用性','#性能','#高可用','#长连接','#gperftools','#CPU profile','#内存','#heap profile','#sar','#CPU','#IO','#perf',],
+            'itemHeight': 20,
+            'width': 418
+        }).AutoComplete('show');
+    })
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $(".post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+        $("input[name=pay]").on("click", function () {
+            if($("input[name=pay]:checked").val()=="weixin"){
+                $(".shang_box .shang_payimg .pay_img").addClass("weixin_img");
+            } else {
+                $(".shang_box .shang_payimg .pay_img").removeClass("weixin_img");
+            }
+        })
+        
+
+        /*高亮代码块行号*/
+        
+        $('pre code').each(function(){
+            var lines = $(this).text().split('\n').length - 1, widther='';
+            if (lines>99) {
+                widther = 'widther'
+            }
+            var $numbering = $('<ul/>').addClass('pre-numbering ' + widther).attr("unselectable","on");
+            $(this).addClass('has-numbering ' + widther)
+                    .parent()
+                    .append($numbering);
+            for(var i=1;i<=lines;i++){
+                $numbering.append($('<li/>').text(i));
+            }
+        });
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+    function dashangToggle() {
+        $(".shang_box").fadeToggle();
+        $(".hide_box").fadeToggle();
+    }
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<style>
+    pre{
+        position: relative;
+        margin-bottom: 24px;
+        border-radius: 10px;
+        border: 1px solid #e2dede;
+        background: #FFF;
+        overflow: hidden;
+    }
+    code.has-numbering{
+        margin-left: 30px;
+    }
+    code.has-numbering.widther{
+        margin-left: 35px;
+    }
+    .pre-numbering{
+        margin: 0px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        padding: 0.5em 3px 0.7em 5px;
+        border-right: 1px solid #C3CCD0;
+        text-align: right;
+        color: #AAA;
+        background-color: #fafafa;
+    }
+    .pre-numbering.widther {
+        width: 35px;
+    }
+</style>
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+        .nav .hide-list.fullscreen {
+            left: 492px
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+    .post .pjax article .article-entry>ol, .post .pjax article .article-entry>ul, .post .pjax article>ol, .post .pjax article>ul{
+        border: #e2dede solid 1px;
+        border-radius: 10px;
+        padding: 10px 32px 10px 56px;
+    }
+    .post .pjax article .article-entry li>ol, .post .pjax article .article-entry li>ul,.post .pjax article li>ol, .post .pjax article li>ul{
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .post .pjax article .article-entry>ol>li, .post .pjax article .article-entry>ul>li,.post .pjax article>ol>li, .post .pjax article>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    .post .pjax article .article-entry li>ol>li, .post .pjax article .article-entry li>ul>li,.post .pjax article li>ol>li, .post .pjax article li>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+    .nav-right:before {
+        content: ' ';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.3;
+        background: url("https://i.loli.net/2019/07/22/5d3521411f3f169375.png");
+        background-repeat: no-repeat;
+        background-position: 50% 0;
+        -ms-background-size: cover;
+        -o-background-size: cover;
+        -moz-background-size: cover;
+        -webkit-background-size: cover;
+        background-size: cover;
+    }
+    
+
+    
+</style>
+
+
+
+
+
+
+<div class="mobile-menus-out" >
+
+</div>
+<div class="mobile-menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+</div>
+
+
+</html>

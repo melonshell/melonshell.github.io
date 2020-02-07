@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  <title>多机房多活架构 | Hexo</title>
+  <meta name="keywords" content=" 多机房 , 多活 ">
+  <meta name="description" content="多机房多活架构 | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="keywords" content="缓存淘汰算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta property="og:url" content="http://melonshell.github.io/2020/02/07/ds_cache_eli/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce4.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce5.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce2.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce3.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce6.png">
+<meta property="og:updated_time" content="2020-02-07T14:47:40.476Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta name="twitter:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="twitter:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.0.1" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.0.1" rel="stylesheet">
+
+<link href="//cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet">
+<link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="/js/jquery.autocomplete.min.js?v=1.0.1"></script>
+
+<script src="//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script src="/js/iconfont.js?v=1.0.1"></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="false">
+  <input class="theme_blog_path" value>
+</div>
+
+<body>
+<!-- hexo-inject:begin --><!-- hexo-inject:end --><aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>melonshell</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="github" href="https://github.com/melonshell" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="email" href="mailto:yj.mapple@gmail.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=466243859&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+</div>
+
+
+
+<a class="more-menus">更多菜单</a>
+
+
+<ul>
+    <li><div class="all active">全部文章<small>(42)</small></div></li>
+    
+        
+            
+            <li><div data-rel="性能分析">性能分析<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="积累收集">积累收集<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="docker">docker<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="数据结构与算法">数据结构与算法<small>(8)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="go语言">go语言<small>(10)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="Redis">Redis<small>(2)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="TCP/IP系列">TCP/IP系列<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="技术文章阅读">技术文章阅读<small>(11)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="工具"><i class="fold iconfont icon-right"></i>工具<small>(4)</small></div>
+                
+                    <ul class="sub hide">
+                        
+                        <li><div data-rel="性能">性能<small>(4)</small></div>
+                            
+                        </li>
+                            
+                    </ul>
+                
+            </li>
+            
+        
+    
+        
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+    </div>
+    <div><a class="about  site_url"  href="/about">关于</a></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="42">
+<input type="hidden" id="yelog_site_word_count" value="78.2k">
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        友情链接
+        <i class="back-title-list"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <form onkeydown="if(event.keyCode==13){return false;}">
+        <input class="search" type="text" placeholder="Search..." autocomplete="off"id="local-search-input" >
+        <i class="cross"></i>
+        <span>
+            <label for="tagswitch">Tags:</label>
+            <input id="tagswitch" type="checkbox" style="display: none" />
+            <i id="tagsWitchIcon"></i>
+        </span>
+    </form>
+    <div class="tags-list">
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">cpu</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">分支预测</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存淘汰算法</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">bloom filter</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">堆</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">堆排序</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">lower_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">upper_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">查找</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">旋转数组</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">非递归遍历</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">查找第k大数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">go</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">channel</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">error</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">select</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">nil</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">gdb</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">接收者</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">常用命令</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">redis</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP/IP</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP_NODELAY</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">延迟ACK</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">docker compose</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">集群搭建</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">负载均衡</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存经典问题</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">多机房</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多活</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">微信</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">红包</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">RPC</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">单链表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">环</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">线程数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">单点</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">可用性</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">性能</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">高可用</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">长连接</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">gperftools</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">CPU profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">内存</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">heap profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">sar</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">CPU</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">IO</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">perf</a>
+    </li>
+    
+    <div class="clearfix"></div>
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="性能分析 "
+           href="/2019/10/10/CPU-branch-prediction/"
+           data-tag="cpu,分支预测"
+           data-author="" >
+            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/29/comm-article/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="精品文章">精品文章</span>
+            <span class="post-date" title="2019-10-29 23:00:17">2019/10/29</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/10/comm-url/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用链接">常用链接</span>
+            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/17/comm-tool/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用工具">常用工具</span>
+            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+        </a>
+        
+        <a  class="C/C++ "
+           href="/2020/01/03/cpp-basic/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="基础知识">基础知识</span>
+            <span class="post-date" title="2020-01-03 19:07:13">2020/01/03</span>
+        </a>
+        
+        <a  class="docker "
+           href="/2019/11/26/docker/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用命令">常用命令</span>
+            <span class="post-date" title="2019-11-26 16:13:27">2019/11/26</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/02/07/ds_cache_eli/"
+           data-tag="缓存淘汰算法"
+           data-author="" >
+            <span class="post-title" title="常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU">常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU</span>
+            <span class="post-date" title="2020-02-07 18:48:19">2020/02/07</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/31/ds_bloomfilter/"
+           data-tag="bloom filter"
+           data-author="" >
+            <span class="post-title" title="海量数据处理之Bloom Filter">海量数据处理之Bloom Filter</span>
+            <span class="post-date" title="2020-01-31 18:11:25">2020/01/31</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/19/ds_heap_sort/"
+           data-tag="堆,堆排序"
+           data-author="" >
+            <span class="post-title" title="堆和堆排序">堆和堆排序</span>
+            <span class="post-date" title="2020-01-19 18:58:57">2020/01/19</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/18/ds_lower_upper_bound/"
+           data-tag="lower_bound,upper_bound,查找"
+           data-author="" >
+            <span class="post-title" title="lower_bound和upper_bound算法">lower_bound和upper_bound算法</span>
+            <span class="post-date" title="2020-01-18 23:24:13">2020/01/18</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2019/12/25/ds_rotated_array_search/"
+           data-tag="查找,旋转数组"
+           data-author="" >
+            <span class="post-title" title="旋转数组查找">旋转数组查找</span>
+            <span class="post-date" title="2019-12-25 16:11:03">2019/12/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/29/ds_traverse_tree/"
+           data-tag="非递归遍历"
+           data-author="" >
+            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
+            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/20/ds_select_Kth/"
+           data-tag="查找第k大数"
+           data-author="" >
+            <span class="post-title" title="select问题">select问题</span>
+            <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/16/go1/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go环境搭建">go环境搭建</span>
+            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/17/go2/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go常用命令">go常用命令</span>
+            <span class="post-date" title="2019-09-17 22:46:33">2019/09/17</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/07/go10_channel/"
+           data-tag="go,channel"
+           data-author="" >
+            <span class="post-title" title="go语言之channel">go语言之channel</span>
+            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/25/go3/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
+            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/03/go4/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
+            <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/09/go7_error/"
+           data-tag="go,error"
+           data-author="" >
+            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
+            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/05/go9_select/"
+           data-tag="go,select"
+           data-author="" >
+            <span class="post-title" title="go语言之select">go语言之select</span>
+            <span class="post-date" title="2019-12-05 16:45:42">2019/12/05</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/13/go5_nil/"
+           data-tag="go,nil"
+           data-author="" >
+            <span class="post-title" title="go之nil">go之nil</span>
+            <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/20/go6_gdb/"
+           data-tag="go,gdb"
+           data-author="" >
+            <span class="post-title" title="gdb调试go">gdb调试go</span>
+            <span class="post-date" title="2019-10-20 09:07:31">2019/10/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/21/go8_receiver/"
+           data-tag="go,接收者"
+           data-author="" >
+            <span class="post-title" title="go语言之指针和值接收者">go语言之指针和值接收者</span>
+            <span class="post-date" title="2019-11-21 00:28:31">2019/11/21</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/02/05/redis0_cmd/"
+           data-tag="常用命令,redis"
+           data-author="" >
+            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
+            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
+        </a>
+        
+        <a  class="TCP/IP系列 "
+           href="/2019/11/23/tcp_nodelay_delayed_ack/"
+           data-tag="TCP/IP,TCP_NODELAY,延迟ACK"
+           data-author="" >
+            <span class="post-title" title="TCP_NODELAY和延迟ACK">TCP_NODELAY和延迟ACK</span>
+            <span class="post-date" title="2019-11-23 11:01:13">2019/11/23</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2019/12/29/redis1_build_cluster/"
+           data-tag="redis,docker compose,集群搭建"
+           data-author="" >
+            <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
+            <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/02/tech10_ha/"
+           data-tag="负载均衡"
+           data-author="" >
+            <span class="post-title" title="负载均衡知识总结">负载均衡知识总结</span>
+            <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/05/tech11_cache1/"
+           data-tag="缓存经典问题"
+           data-author="" >
+            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
+            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/22/tech1_db_split/"
+           data-tag="读写分离、垂直拆分、水平拆分、分库分表"
+           data-author="" >
+            <span class="post-title" title="读写分离、垂直拆分、水平拆分、分库分表">读写分离、垂直拆分、水平拆分、分库分表</span>
+            <span class="post-date" title="2020-01-22 17:03:33">2020/01/22</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/24/tech3_multi_room_living/"
+           data-tag="多机房,多活"
+           data-author="" >
+            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
+            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/23/tech2_wx_red_packet/"
+           data-tag="微信,红包"
+           data-author="" >
+            <span class="post-title" title="微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑">微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑</span>
+            <span class="post-date" title="2020-01-23 17:55:26">2020/01/23</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/25/tech4_rpc/"
+           data-tag="RPC"
+           data-author="" >
+            <span class="post-title" title="RPC client异步收发核心细节">RPC client异步收发核心细节</span>
+            <span class="post-date" title="2020-01-25 12:18:12">2020/01/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/15/ds_link_list_circle/"
+           data-tag="单链表,环"
+           data-author="" >
+            <span class="post-title" title="判断单链表是否有环">判断单链表是否有环</span>
+            <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/26/tech5_thread_num/"
+           data-tag="线程数"
+           data-author="" >
+            <span class="post-title" title="线程数究竟设置多少合理？">线程数究竟设置多少合理？</span>
+            <span class="post-date" title="2020-01-26 16:32:07">2020/01/26</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/28/tech7_single_ha_pf/"
+           data-tag="单点,可用性,性能"
+           data-author="" >
+            <span class="post-title" title="单点系统架构的可用性和性能优化">单点系统架构的可用性和性能优化</span>
+            <span class="post-date" title="2020-01-28 09:48:07">2020/01/28</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/29/tech8_ha/"
+           data-tag="高可用"
+           data-author="" >
+            <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
+            <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/30/tech9_58pc/"
+           data-tag="长连接"
+           data-author="" >
+            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
+            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/10/tool2_gperftools/"
+           data-tag="gperftools,CPU profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之CPU Profile">gperftools之CPU Profile</span>
+            <span class="post-date" title="2019-09-10 22:55:47">2019/09/10</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/14/tool3_gperftools2/"
+           data-tag="gperftools,内存,heap profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之heap profile">gperftools之heap profile</span>
+            <span class="post-date" title="2019-09-14 23:36:27">2019/09/14</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/30/tool4_sar/"
+           data-tag="内存,sar,CPU,IO"
+           data-author="" >
+            <span class="post-title" title="sar查看内存、CPU、IO">sar查看内存、CPU、IO</span>
+            <span class="post-date" title="2019-10-30 08:02:03">2019/10/30</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/27/tech6_lb_ha1/"
+           data-tag="负载均衡,高可用"
+           data-author="" >
+            <span class="post-title" title="负载均衡和高可用介绍">负载均衡和高可用介绍</span>
+            <span class="post-date" title="2020-01-27 23:25:02">2020/01/27</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/09/tool1_perf/"
+           data-tag="perf"
+           data-author="" >
+            <span class="post-title" title="perf性能分析">perf性能分析</span>
+            <span class="post-date" title="2019-10-09 07:54:19">2019/10/09</span>
+        </a>
+        
+    </nav>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div class="post">
+    <div class="pjax">
+        <article id="post-tech3_multi_room_living" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">多机房多活架构</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            
+                <a href="javascript:" data-rel="技术文章阅读">技术文章阅读</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="javascript:" class="color4">多机房</a>
+            
+            <a href="javascript:" class="color3">多活</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+        创建时间:<time class="date" title='更新时间: 2020-01-26 16:29:53'>2020-01-24 10:47</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        <span>字数:4.4k</span>
+        
+        
+        <span id="busuanzi_container_page_pv">
+            阅读:<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+        <span class="top-comment" title="跳转至评论区">
+            <a href="#comments">
+                评论:<span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </a>
+        </span>
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-被迁移的系统是一个什么样的架构？"><span class="toc-text">1 被迁移的系统是一个什么样的架构？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-机房迁移的目标是什么？"><span class="toc-text">2 机房迁移的目标是什么？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-临时性多机房架构能否避免？"><span class="toc-text">3 临时性多机房架构能否避免？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-临时性多机房架构如何实施？"><span class="toc-text">4 临时性多机房架构如何实施？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-如何分批平滑上云？"><span class="toc-text">5 如何分批平滑上云？</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#5-1-站点与服务迁移：无状态，迁移容易"><span class="toc-text">5.1 站点与服务迁移：无状态，迁移容易</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-2-缓存迁移：有状态，但数据可重建"><span class="toc-text">5.2 缓存迁移：有状态，但数据可重建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-3-数据库迁移：有状态，数据也要迁移"><span class="toc-text">5.3 数据库迁移：有状态，数据也要迁移</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-4-自顶向下的机房迁移方案总结"><span class="toc-text">5.4 自顶向下的机房迁移方案总结</span></a></li></ol></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>2015年底的时候，到家集团启动了一个&quot;凌云&quot;项目，将所有系统从北京的M6机房迁移到阿里云，完成技术栈&quot;上云&quot;。项目涉及几百台机器，到家所有的业务，所有的系统，需要所有技术部门配合，耗时超过一个季度，是一个不折不扣的大项目。</p>
+<p>今天，简单聊聊当时的架构方案，我们是如何平滑进行机房迁移的。</p>
+<h1 id="1-被迁移的系统是一个什么样的架构？"><a href="#1-被迁移的系统是一个什么样的架构？" class="headerlink" title="1 被迁移的系统是一个什么样的架构？"></a>1 被迁移的系统是一个什么样的架构？</h1><p>  <img src="/pic/tech3_multi_room_living1.jpg" alt="被迁移系统架构"><br>上图是一个典型的互联网单机房系统架构：</p>
+<ul>
+<li>上游是客户端，PC浏览器或者APP；</li>
+<li>然后是站点接入层，做了高可用集群；</li>
+<li>接下来是服务层，服务层又分为业务服务层和基础服务层，都做了高可用集群；</li>
+<li>底层是数据层，包括缓存和数据库；</li>
+</ul>
+<p>该单机房分层架构，所有的应用、服务、数据部署在同一个机房，其架构特点是全连接：</p>
+<ul>
+<li>站点层调用业务层，业务服务复制了多少份，上层就要连接多少个服务；</li>
+<li>业务服务层调用基础服务层，基础服务层服务了多少份，上层就要连多少个服务；</li>
+<li>服务层调用数据库，数据库冗余了多少份，就要连多少个数据库；<br>例如：站点接入层某一应用有2台机器，业务服务层某一个服务有4台机器，那肯定是上游的2台会与下游的4台全连接；</li>
+</ul>
+<p><strong>全连接如何保证系统的负载均衡和高可用？</strong><br>全连接架构的负载均衡和高可用保证，是通过连接池实现的，不管是NG连接web，web连接业务服务，业务服务连接基础服务，服务连接数据库，都是这样。<br><strong>单机房架构的核心是全连接</strong></p>
+<h1 id="2-机房迁移的目标是什么？"><a href="#2-机房迁移的目标是什么？" class="headerlink" title="2 机房迁移的目标是什么？"></a>2 机房迁移的目标是什么？</h1><p>单机房架构的特点是“全连接”，机房迁移要做一个什么样的事情呢？<br>  <img src="/pic/tech3_multi_room_living2.jpg" alt="机房迁移"><br>迁移之前，系统部署在机房A(M6)内，是单机房架构；<br>迁移之后，系统部署在机房B(阿里云)，仍然是单机房架构，只是换了一个机房而已；</p>
+<p><strong>有什么好的迁移方案？</strong><br>最容易想到的一个方案：把所有服务在新机房全部都部署一套，然后将流量切过去；</p>
+<p><strong>这个方案存在什么问题？</strong><br>问题1：需要停止服务，丧失了可用性；<br>问题2：即使可以接受停服，当几百台机器，几千个系统重新部署一套，切换流量，一步成功的概率较低，风险较高；<br>机房迁移的难点，是平滑迁移，整个过程不停服务，能够蚂蚁搬家式迁移。</p>
+<p><strong>机房迁移的设计目标是：</strong></p>
+<ul>
+<li>平滑迁移，不停服务；</li>
+<li>可以分批迁移；</li>
+<li>随时可以回滚；</li>
+</ul>
+<h1 id="3-临时性多机房架构能否避免？"><a href="#3-临时性多机房架构能否避免？" class="headerlink" title="3 临时性多机房架构能否避免？"></a>3 临时性多机房架构能否避免？</h1><p>如果想要平滑迁移机房，不停服务，且逐步迁移，迁移的过程中，势必存在一个中间过渡阶段，两边机房都有流量，两边机房都对外提供服务，这就是一个多机房的架构。<br>迁移过程中，多机房架构不可避免。</p>
+<p>前文提到的单机房架构，是一个&quot;全连接&quot;架构，能不能直接将单机房的全连架构套用到多机房呢？</p>
+<p>如果直接将单机房全连接的架构直接应用到多机房，会导致很多跨机房的连接：</p>
+<ul>
+<li>站点层连接业务服务层，一半的请求跨机房；</li>
+<li>业务服务层连接基础服务层，一半的请求跨机房；</li>
+<li>基础服务层连数据层，一半的请求跨机房；</li>
+</ul>
+<p><strong>大量的跨机房连接会带来什么问题？</strong></p>
+<p>同机房连接，内网的性能损耗几乎可以忽略不计，一旦涉及到跨机房访问，即使机房和机房之间有专线，访问的时延可能增加到几毫秒，甚至几十毫秒(跟机房间光纤距离有关)。举个例子，用户访问一个页面需要用到很多数据，这些数据可能需要20次相互调用(站点调用服务，服务调用缓存和数据库等)，如果有一半调用跨机房(10次调用)，机房之间延迟是20毫秒，因为跨机房调用导致的请求迟延就达到了200毫秒，这是绝不能接受的。</p>
+<p><strong>想要平滑的实施机房迁移，临时性的多机房架构不可避免。</strong></p>
+<p>小结：</p>
+<ul>
+<li>单机房架构的核心是全连接。</li>
+<li>机房迁移方案的设计目标是：平滑迁移，不停服务，分批迁移，随时可以回滚；</li>
+<li>想要平滑的实施机房迁移，临时性的多机房架构不可避免；</li>
+</ul>
+<h1 id="4-临时性多机房架构如何实施？"><a href="#4-临时性多机房架构如何实施？" class="headerlink" title="4 临时性多机房架构如何实施？"></a>4 临时性多机房架构如何实施？</h1><p>如将单机房全连接架构应用到多机房，会有大量跨机房调用，极大增加请求时延，是业务无法接受的，想降低时延，就必须实施同机房连接。<br><strong>多机房多活架构，什么是理想状态下的同机房连接？</strong><br>  <img src="/pic/tech3_multi_room_living3.jpg" alt="同机房连接"><br>如上图所示，多机房多活架构，理想状态下除了异步数据同步跨机房通讯，其他所有通讯均为同机房连接：</p>
+<ul>
+<li>web连业务服务；</li>
+<li>业务服务连基础服务；</li>
+<li>服务连数据库，主库写，从库读，读写分离；<br>上述架构，每个机房是一套独立的系统，仅仅通过异步数据同步获取全量数据，当发生机房故障是，将流量切到另一个机房，就能冗余机房级故障，实现高可用。</li>
+</ul>
+<p><strong>上述多机房架构存在什么问题？</strong><br>异步数据同步存在延时(如1min)，这个延时的存在会使得两个机房的数据不一致，从而导致严重的业务问题。举个例子：<br>某时刻用户X有余额100元，两个机房都存储改余额的精准数据，接下来<br>(1) 余额100，X在北京(就近访问机房A)消费了80元，余额仅剩20元，该数据在1分钟会同步到机房B；<br>(2) 余额100，X的朋友在广州(就近访问机房B)用X的账号消费了70元，余额仅剩30元，该数据在1分钟后也会同步到机房A；<br>从而导致：<br>(1) 超额消费，100余额，买了150的东西；<br>(2) 余额异常，余额是20还是30？</p>
+<p><strong>上述架构适用于什么业务场景？</strong><br>任何脱离业务的架构设计都是耍流氓。当每个机房都有很多全局业务数据的访问场景时，上述多机房架构并不适用，会存在大量数据不一致，但当每个机房都访问局部业务数据时，上述多机房架构仍然是可行的，典型的业务有滴滴和快狗打车，这些业务具备数据聚集效应：<br>(1) 下单用户在同一个城市；<br>(2) 接单司机在同一个城市；<br>(3) 交易订单在同一个城市；<br>这类业务非常适合上述多机房多活架构，多个机房之间即使存在1分钟延时的异步数据同步，对业务也不会造成太大的影响。多机房多活架构，做不到理想状态下的同机房连接，有没有折中方案？<br>如果完全避免跨机房调用的理想状态做不到，就尽量做到最小化跨机房调用。<br>  <img src="/pic/tech3_multi_room_living4.jpg" alt="伪多机房软件架构"><br>如上图情况，在非必须的情况下，优先连接同机房的站点和服务：<br>(1) 站点层只连接同机房的业务服务层；<br>(2) 业务服务层只连接同机房的基础服务层；<br>(3) 服务层只连接同机房的读库；<br>(4) 跨机房写库；</p>
+<p>该方案没有完全避免跨机房调用，但做到了最小化跨机房调用，只有写请求是跨机房的，但互联网业务绝大部分都是读多写少的业务：<br>(1) 百度的搜索100%是读业务；<br>(2) 京东淘宝电商99%的浏览搜索是读业务，只有下单支付是写业务；<br>(3) 58同城99%帖子的列表详情查看是读业务，只有发布帖子是写业务；</p>
+<p>写业务比例相对少，并没有做到100%的同机房连接，通常称之为伪多机房多活架构；伪多机房多活架构，有主机房和从机房的差别。多机房多活的初衷是容机房故障，该架构当出现机房故障时，可以把入口流量切到另一个机房：<br>(1) 如果挂掉的是，不包含主库的从机房，迁移流量后能直接容错；<br>(2) 如果挂掉的是，包含主库的主机房，只迁移流量，系统整体99%的读请求可以容错，但1%的写请求会受到影响，此时需要将从库变为主库，才能完全容错，这个过程需要DBA接入，不需要所有业务线上修改。</p>
+<p><strong>画外音</strong>：除非站点和服务使用内网IP，而不是内网域名连接数据库，架构师之路已经强调过很多次，不要使用内网IP，一定要使用内网域名，这样运维在切换数据库时：</p>
+<ul>
+<li>运维修改内网DNS，将内网域名指向新的IP，如果是短连接调用，未来新的请求流量，自然会切到新的IP上；如果是长连接调用，新的长连接会连到新的IP上，但旧的长连接仍然连接的是旧IP；</li>
+<li>运维统一将旧IP上的连接切断，如无意外，服务或者数据库的连接池都有重连功能，重连后就会自动连到新IP上去；<br>如此这般，只要运维配合就可以完成IP的迁移，对于所有上游的调用方不需要配合修改配置重启，对于IP解耦非常有效；</li>
+</ul>
+<p>伪多机房多活架构，是一个实践性，落地性很强的架构，它对原有架构体系的冲击非常小，和单机房架构相比，仅仅是：<br>(1) 跨机房主从同步数据，会多10毫秒延时；主从同步数据，本来就会有延时；<br>(2) 跨机房写，会多10毫秒延时；</p>
+<p>小结：<br>(1) 理想多机房多活架构，是纯粹的同机房连接，仅有异步数据同步会跨机房；<br>(2) 理想多机房多活架构，会有较严重数据一致性问题，仅适用于具备数据聚集效应的业务场景，例如：滴滴，快狗打车；<br>(3) 伪多机房多活架构，思路是最小化跨机房连接，机房区分主次，落地性强，对原有架构冲击较小，强烈推荐；</p>
+<h1 id="5-如何分批平滑上云？"><a href="#5-如何分批平滑上云？" class="headerlink" title="5 如何分批平滑上云？"></a>5 如何分批平滑上云？</h1><p>  <img src="/pic/tech3_multi_room_living5.jpg" alt="系统架构"><br>如上图，系统分层架构包含：web、业务服务、基础服务、缓存、数据库，都需要迁移；大的方向，有两种方案：<br>(1) 自底向上的迁移方案，从数据库开始迁移；<br>(2) 自顶向下的迁移方案，从web开始迁移；<br>两种方案分别在58同城和58到家实践过，都是平滑的，蚂蚁搬家式的，随时可以回滚，对业务无任何影响，本文重点介绍自顶向下方案。</p>
+<h2 id="5-1-站点与服务迁移：无状态，迁移容易"><a href="#5-1-站点与服务迁移：无状态，迁移容易" class="headerlink" title="5.1 站点与服务迁移：无状态，迁移容易"></a>5.1 站点与服务迁移：无状态，迁移容易</h2><p>  <img src="/pic/tech3_multi_room_living6.jpg" alt="站点和服务迁移"><br>步骤一，前置条件：<br>(1) 新机房准备就绪；<br>(2) 专线准备就绪；</p>
+<p>步骤二，在新机房搭建好待迁移的子业务，部署好web站点，业务服务，基础服务，做好充分的测试；<br>这里重点说明的是：<br>(1) 垂直拆分迁移，每次迁移的范围不要太大，划分好子业务和子系统；<br>(2) 缓存和数据库还未迁移，存在跨机房连接；<br>(3) 新机房的配置文件注意同连，不要跨机房调用业务与基础服务；</p>
+<p>只要不切流量，依然老机房提供服务，新机房随便操作；</p>
+<p>步骤三，灰度切流量，将被迁移的子业务切5%的流量到新机房，观察新机房的站点与服务是否异常，如果没有问题再10%，20%，50%，100%逐步放量，直至某个子业务迁移完成。第一个子业务的站点和服务迁移完成之后，第二个子业务，第三个子业务，直到所有业务把站点和服务都全流量的迁移到新机房。</p>
+<p><strong>如何应对异常？</strong><br>在迁移过程中，任何一个子业务，任何时间发生异常，可以将流量切回旧机房，旧机房的站点、服务、配置都没有改动，依然能提供服务，因此这是一个非常稳的迁移方案。</p>
+<h2 id="5-2-缓存迁移：有状态，但数据可重建"><a href="#5-2-缓存迁移：有状态，但数据可重建" class="headerlink" title="5.2 缓存迁移：有状态，但数据可重建"></a>5.2 缓存迁移：有状态，但数据可重建</h2><p>站点和服务迁移完成之后，接下来再迁缓存。<br>  <img src="/pic/tech3_multi_room_living7.jpg" alt="缓存迁移"><br>经过第一步的迁移，如上图：<br>(1) 所有入口流量都已经迁到了新的机房；<br>(2) 缓存和数据库，仍然使用旧机房；<br>旧机房的站点和服务不能停，只要旧机房不停，就保留了切回流量回滚的可能性。</p>
+<p>步骤四，在新机房搭建好缓存，缓存的规模和体量与旧机房一样；<br>步骤五，按照子业务垂直逐步切换使用新机房缓存，切换细节为：<br>(1) 运维做一个缓存内网DNS的切换(内网域名不变，IP切到新机房)；<br>(2) 杀掉原有缓存连接，业务线不需要做任何修改，只需要配合观察业务；<br>(3) 缓存连接池会自动重连，重连会自动连接新机房的缓存；</p>
+<p>这里需要注意几点：<br>(1) 如果没有使用内网域名，而是采用IP直连缓存，则需要业务配合，换新机房IP重启；<br>(2) 缓存迁移时间，尽量选在流量低峰期，新缓存是空数据，如果选在流量高峰期，短时间内可能会有大量请求穿透到数据库上；<br>(3) 对于同一个服务，缓存的切换是瞬时的，不会同时使用新旧机房缓存；<br>缓存的迁移也是按照子业务垂直拆分，蚂蚁搬家式迁移，整个迁移过程除了运维操作切内网域名，研发和测试都只是配合观察服务，风险较低；缓存允许cache miss，不用转移旧缓存内数据。</p>
+<h2 id="5-3-数据库迁移：有状态，数据也要迁移"><a href="#5-3-数据库迁移：有状态，数据也要迁移" class="headerlink" title="5.3 数据库迁移：有状态，数据也要迁移"></a>5.3 数据库迁移：有状态，数据也要迁移</h2><p>站点层、服务层、缓存层都迁移之后，最后是数据库的迁移。<br>  <img src="/pic/tech3_multi_room_living8.jpg" alt="数据库迁移"><br>在迁移数据库之前，服务通过专线跨机房连接数据库。</p>
+<p><strong>如何迁移数据库？</strong><br>步骤六，现在新机房搭建新的数据库；<br>步骤七，数据同步，自建机房可以使用数据库MM/MS架构同步数据，阿里云可以使用DTS同步数据；<br><strong>数据库同步完之后，如何进行数据源切换？</strong><br>能否像缓存的迁移一样，运维修改一个数据库内网DNS指向，然后切断数据库连接，让服务重连新的数据库？这样业务不需要改动，也不需要重启，此种方式看上去不错，但是：<br>(1) 一定要保证数据库同步完成，才能切流量，但数据同步总是有延迟的，旧机房一直在不停的写数据；<br>(2) 只有域名和端口不发生变化，才能不修改配置完成切换，但如果域名和端口(主要是端口)发生变化，是做不到不修改配置和重启的，例如原有数据库端口使用了5858，而阿里云要求你是用3200，就必须改端口重启；</p>
+<p>步骤八，最终的方案是，DBA在旧机房的数据库设置一个ReadOnly，停止数据的写入，在秒级别RDS同步完成之后，服务修改数据库端口，重启连接新机房的数据库，完成数据层的切换。这一过程中为了保证数据的一致性，会损失秒级别的写入可用性。<br>  <img src="/pic/tech3_multi_room_living9.jpg" alt="迁移完成"><br>经过上述站点、服务、缓存、数据库的迁移，上云目标平滑完成。</p>
+<h2 id="5-4-自顶向下的机房迁移方案总结"><a href="#5-4-自顶向下的机房迁移方案总结" class="headerlink" title="5.4 自顶向下的机房迁移方案总结"></a>5.4 自顶向下的机房迁移方案总结</h2><p><strong>先迁移站点层、业务服务层和基础服务层</strong><br>(1) 准备新机房与专线；<br>(2) 搭建集群，充分测试，子业务垂直拆分迁移；<br>(3) 灰度切流量；</p>
+<p><strong>缓存层迁移</strong><br>(4) 搭建新缓存；<br>(5) 运维修改缓存内网DNS，切断旧缓存连接，重连新缓存，切流量；</p>
+<p><strong>数据库迁移</strong><br>(6) 搭建新数据库；<br>(7) 同步数据；<br>(8) 旧库ReadOnly，同步完成后（秒级），服务指向新库，改配置重启，切流量；</p>
+<p>以上8大步骤，整个过程分批迁移，一个子业务一个子业务的迁移，一块缓存一块缓存的迁移，一个数据库一个数据库的迁移，任何步骤出现问题都可以回滚的，整个过程不停服务。</p>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至yj.mapple@gmail.com </span>
+    </div>
+</article>
+
+
+<p>
+    <a href="javascript:void(0)" class="dashang" onclick="dashangToggle()">赏</a>
+</p>
+
+
+<div class="article_copyright">
+    <p><span class="copy-title">文章标题:</span>多机房多活架构</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">4.4k</span></p>
+    <p><span class="copy-title">本文作者:</span><a href="javascript:void(0)" title="melonshell">melonshell</a></p>
+    <p><span class="copy-title">发布时间:</span>2020-01-24, 10:47:24</p>
+    <p><span class="copy-title">最后更新:</span>2020-01-26, 16:29:53</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2020/01/24/tech3_multi_room_living/" title="多机房多活架构">http://melonshell.github.io/2020/01/24/tech3_multi_room_living/</a>
+    <p>
+        <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+    </p>
+</div>
+
+
+
+    <div id="comments"></div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+
+<script type="text/javascript">
+    $.getScript('/js/gitalk.js', function () {
+        var gitalk = new Gitalk({
+            clientID: 'e97d9b9b791221194492',
+            clientSecret: 'c3930f83c344398e78fe43dff9bd0af7ce3024ab',
+            repo: 'melonshell.github.io',
+            owner: 'melonshell',
+            admin: ['melonshell'],
+            id: decodeURI(location.pathname),
+            distractionFreeMode: 'true',
+            language: 'zh-CN',
+            perPage: parseInt('10',10)
+        })
+        gitalk.render('comments')
+    })
+</script>
+
+
+
+
+    
+        <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<input type="hidden" id="MathJax-js"
+        value="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</input>
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry">©2019-2099 melonshell</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full"><span class="min "></span></button>
+<button class="post-toc-menu"><span class="post-toc-menu-icons"></span></button>
+<div class="post-toc"><span class="post-toc-title">目录</span>
+    <div class="post-toc-content">
+
+    </div>
+</div>
+<a class="" id="rocket" href="javascript:void(0)"></a>
+    </div>
+</div>
+<div class="acParent"></div>
+
+<div class="hide_box" onclick="dashangToggle()"></div>
+<div class="shang_box">
+    <a class="shang_close" href="javascript:void(0)" onclick="dashangToggle()">×</a>
+    <div class="shang_tit">
+        <p>喜欢就点赞,疼爱就打赏</p>
+    </div>
+    <div class="shang_payimg">
+        <div class="pay_img">
+            <img src="/img/alipay.jpg" class="alipay" title="扫码支持">
+            <img src="/img/weixin.jpg" class="weixin" title="扫码支持">
+        </div>
+    </div>
+    <div class="shang_payselect">
+        <span><label><input type="radio" name="pay" checked value="alipay">支付宝</label></span><span><label><input type="radio" name="pay" value="weixin">微信</label></span>
+    </div>
+</div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.0.1" ></script>
+
+<script src="/js/script.js?v=1.0.1" ></script>
+<script>
+    var img_resize = 'default';
+    /*作者、标签的自动补全*/
+    $(function () {
+        $('.search').AutoComplete({
+            'data': ['#cpu','#分支预测','#缓存淘汰算法','#bloom filter','#堆','#堆排序','#lower_bound','#upper_bound','#查找','#旋转数组','#非递归遍历','#查找第k大数','#go','#channel','#error','#select','#nil','#gdb','#接收者','#常用命令','#redis','#TCP/IP','#TCP_NODELAY','#延迟ACK','#docker compose','#集群搭建','#负载均衡','#缓存经典问题','#读写分离、垂直拆分、水平拆分、分库分表','#多机房','#多活','#微信','#红包','#RPC','#单链表','#环','#线程数','#单点','#可用性','#性能','#高可用','#长连接','#gperftools','#CPU profile','#内存','#heap profile','#sar','#CPU','#IO','#perf',],
+            'itemHeight': 20,
+            'width': 418
+        }).AutoComplete('show');
+    })
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $(".post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+        $("input[name=pay]").on("click", function () {
+            if($("input[name=pay]:checked").val()=="weixin"){
+                $(".shang_box .shang_payimg .pay_img").addClass("weixin_img");
+            } else {
+                $(".shang_box .shang_payimg .pay_img").removeClass("weixin_img");
+            }
+        })
+        
+
+        /*高亮代码块行号*/
+        
+        $('pre code').each(function(){
+            var lines = $(this).text().split('\n').length - 1, widther='';
+            if (lines>99) {
+                widther = 'widther'
+            }
+            var $numbering = $('<ul/>').addClass('pre-numbering ' + widther).attr("unselectable","on");
+            $(this).addClass('has-numbering ' + widther)
+                    .parent()
+                    .append($numbering);
+            for(var i=1;i<=lines;i++){
+                $numbering.append($('<li/>').text(i));
+            }
+        });
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+    function dashangToggle() {
+        $(".shang_box").fadeToggle();
+        $(".hide_box").fadeToggle();
+    }
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<style>
+    pre{
+        position: relative;
+        margin-bottom: 24px;
+        border-radius: 10px;
+        border: 1px solid #e2dede;
+        background: #FFF;
+        overflow: hidden;
+    }
+    code.has-numbering{
+        margin-left: 30px;
+    }
+    code.has-numbering.widther{
+        margin-left: 35px;
+    }
+    .pre-numbering{
+        margin: 0px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        padding: 0.5em 3px 0.7em 5px;
+        border-right: 1px solid #C3CCD0;
+        text-align: right;
+        color: #AAA;
+        background-color: #fafafa;
+    }
+    .pre-numbering.widther {
+        width: 35px;
+    }
+</style>
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+        .nav .hide-list.fullscreen {
+            left: 492px
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+    .post .pjax article .article-entry>ol, .post .pjax article .article-entry>ul, .post .pjax article>ol, .post .pjax article>ul{
+        border: #e2dede solid 1px;
+        border-radius: 10px;
+        padding: 10px 32px 10px 56px;
+    }
+    .post .pjax article .article-entry li>ol, .post .pjax article .article-entry li>ul,.post .pjax article li>ol, .post .pjax article li>ul{
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .post .pjax article .article-entry>ol>li, .post .pjax article .article-entry>ul>li,.post .pjax article>ol>li, .post .pjax article>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    .post .pjax article .article-entry li>ol>li, .post .pjax article .article-entry li>ul>li,.post .pjax article li>ol>li, .post .pjax article li>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+    .nav-right:before {
+        content: ' ';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.3;
+        background: url("https://i.loli.net/2019/07/22/5d3521411f3f169375.png");
+        background-repeat: no-repeat;
+        background-position: 50% 0;
+        -ms-background-size: cover;
+        -o-background-size: cover;
+        -moz-background-size: cover;
+        -webkit-background-size: cover;
+        background-size: cover;
+    }
+    
+
+    
+</style>
+
+
+
+
+
+
+<div class="mobile-menus-out" >
+
+</div>
+<div class="mobile-menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+</div>
+
+
+</html>

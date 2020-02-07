@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.9.0">
+  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
+  <title>负载均衡知识总结 | Hexo</title>
+  <meta name="keywords" content=" 负载均衡 ">
+  <meta name="description" content="负载均衡知识总结 | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="keywords" content="缓存淘汰算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta property="og:url" content="http://melonshell.github.io/2020/02/07/ds_cache_eli/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce4.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce5.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce2.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce3.png">
+<meta property="og:image" content="http://melonshell.github.io/pic/ds_ce6.png">
+<meta property="og:updated_time" content="2020-02-07T14:47:40.476Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="常用缓存淘汰算法LFU&#x2F;LRU&#x2F;ARC&#x2F;FIFO&#x2F;MRU">
+<meta name="twitter:description" content="缓存算法是指令的一个明细表，用于决定缓存系统中哪些数据应该被清理，常见的类型包括LFU/LRU/ARC/FIFO/MRU。 1 最不经常使用算法LFU：Least Frequency Used基本思想：如果数据过去被访问多次，那么将来被访问的频率也更高。注意LFU和LRU的区别，LRU的淘汰规则是基于访问时间，而LFU是基于访问次数。 举个例子：假设缓存大小为3，数据访问序列为set(2,2),s">
+<meta name="twitter:image" content="http://melonshell.github.io/pic/ds_ce1.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.0.1" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.0.1" rel="stylesheet">
+
+<link href="//cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet">
+<link href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="/js/jquery.autocomplete.min.js?v=1.0.1"></script>
+
+<script src="//cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.bootcss.com/nprogress/0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.bootcss.com/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+
+<script src="/js/iconfont.js?v=1.0.1"></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="false">
+  <input class="theme_blog_path" value>
+</div>
+
+<body>
+<!-- hexo-inject:begin --><!-- hexo-inject:end --><aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>melonshell</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="github" href="https://github.com/melonshell" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="email" href="mailto:yj.mapple@gmail.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=466243859&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+</div>
+
+
+
+<a class="more-menus">更多菜单</a>
+
+
+<ul>
+    <li><div class="all active">全部文章<small>(42)</small></div></li>
+    
+        
+            
+            <li><div data-rel="性能分析">性能分析<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="积累收集">积累收集<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="docker">docker<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="数据结构与算法">数据结构与算法<small>(8)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="go语言">go语言<small>(10)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="Redis">Redis<small>(2)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="TCP/IP系列">TCP/IP系列<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="技术文章阅读">技术文章阅读<small>(11)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="工具"><i class="fold iconfont icon-right"></i>工具<small>(4)</small></div>
+                
+                    <ul class="sub hide">
+                        
+                        <li><div data-rel="性能">性能<small>(4)</small></div>
+                            
+                        </li>
+                            
+                    </ul>
+                
+            </li>
+            
+        
+    
+        
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+    </div>
+    <div><a class="about  site_url"  href="/about">关于</a></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="42">
+<input type="hidden" id="yelog_site_word_count" value="78.2k">
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        友情链接
+        <i class="back-title-list"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <form onkeydown="if(event.keyCode==13){return false;}">
+        <input class="search" type="text" placeholder="Search..." autocomplete="off"id="local-search-input" >
+        <i class="cross"></i>
+        <span>
+            <label for="tagswitch">Tags:</label>
+            <input id="tagswitch" type="checkbox" style="display: none" />
+            <i id="tagsWitchIcon"></i>
+        </span>
+    </form>
+    <div class="tags-list">
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">cpu</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">分支预测</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存淘汰算法</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">bloom filter</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">堆</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">堆排序</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">lower_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">upper_bound</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">查找</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">旋转数组</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">非递归遍历</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">查找第k大数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">go</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">channel</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">error</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">select</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">nil</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">gdb</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">接收者</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">常用命令</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">redis</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP/IP</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">TCP_NODELAY</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">延迟ACK</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">docker compose</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">集群搭建</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">负载均衡</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存经典问题</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">多机房</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多活</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">微信</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">红包</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">RPC</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">单链表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">环</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">线程数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">单点</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">可用性</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">性能</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">高可用</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">长连接</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">gperftools</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">CPU profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">内存</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">heap profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">sar</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">CPU</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">IO</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">perf</a>
+    </li>
+    
+    <div class="clearfix"></div>
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="性能分析 "
+           href="/2019/10/10/CPU-branch-prediction/"
+           data-tag="cpu,分支预测"
+           data-author="" >
+            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/29/comm-article/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="精品文章">精品文章</span>
+            <span class="post-date" title="2019-10-29 23:00:17">2019/10/29</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/10/comm-url/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用链接">常用链接</span>
+            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/17/comm-tool/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用工具">常用工具</span>
+            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+        </a>
+        
+        <a  class="C/C++ "
+           href="/2020/01/03/cpp-basic/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="基础知识">基础知识</span>
+            <span class="post-date" title="2020-01-03 19:07:13">2020/01/03</span>
+        </a>
+        
+        <a  class="docker "
+           href="/2019/11/26/docker/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用命令">常用命令</span>
+            <span class="post-date" title="2019-11-26 16:13:27">2019/11/26</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/02/07/ds_cache_eli/"
+           data-tag="缓存淘汰算法"
+           data-author="" >
+            <span class="post-title" title="常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU">常用缓存淘汰算法LFU/LRU/ARC/FIFO/MRU</span>
+            <span class="post-date" title="2020-02-07 18:48:19">2020/02/07</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/31/ds_bloomfilter/"
+           data-tag="bloom filter"
+           data-author="" >
+            <span class="post-title" title="海量数据处理之Bloom Filter">海量数据处理之Bloom Filter</span>
+            <span class="post-date" title="2020-01-31 18:11:25">2020/01/31</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/19/ds_heap_sort/"
+           data-tag="堆,堆排序"
+           data-author="" >
+            <span class="post-title" title="堆和堆排序">堆和堆排序</span>
+            <span class="post-date" title="2020-01-19 18:58:57">2020/01/19</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/18/ds_lower_upper_bound/"
+           data-tag="lower_bound,upper_bound,查找"
+           data-author="" >
+            <span class="post-title" title="lower_bound和upper_bound算法">lower_bound和upper_bound算法</span>
+            <span class="post-date" title="2020-01-18 23:24:13">2020/01/18</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2019/12/25/ds_rotated_array_search/"
+           data-tag="查找,旋转数组"
+           data-author="" >
+            <span class="post-title" title="旋转数组查找">旋转数组查找</span>
+            <span class="post-date" title="2019-12-25 16:11:03">2019/12/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/29/ds_traverse_tree/"
+           data-tag="非递归遍历"
+           data-author="" >
+            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
+            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/20/ds_select_Kth/"
+           data-tag="查找第k大数"
+           data-author="" >
+            <span class="post-title" title="select问题">select问题</span>
+            <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/16/go1/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go环境搭建">go环境搭建</span>
+            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/17/go2/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go常用命令">go常用命令</span>
+            <span class="post-date" title="2019-09-17 22:46:33">2019/09/17</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/07/go10_channel/"
+           data-tag="go,channel"
+           data-author="" >
+            <span class="post-title" title="go语言之channel">go语言之channel</span>
+            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/25/go3/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
+            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/03/go4/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
+            <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/09/go7_error/"
+           data-tag="go,error"
+           data-author="" >
+            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
+            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/05/go9_select/"
+           data-tag="go,select"
+           data-author="" >
+            <span class="post-title" title="go语言之select">go语言之select</span>
+            <span class="post-date" title="2019-12-05 16:45:42">2019/12/05</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/13/go5_nil/"
+           data-tag="go,nil"
+           data-author="" >
+            <span class="post-title" title="go之nil">go之nil</span>
+            <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/10/20/go6_gdb/"
+           data-tag="go,gdb"
+           data-author="" >
+            <span class="post-title" title="gdb调试go">gdb调试go</span>
+            <span class="post-date" title="2019-10-20 09:07:31">2019/10/20</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/21/go8_receiver/"
+           data-tag="go,接收者"
+           data-author="" >
+            <span class="post-title" title="go语言之指针和值接收者">go语言之指针和值接收者</span>
+            <span class="post-date" title="2019-11-21 00:28:31">2019/11/21</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/02/05/redis0_cmd/"
+           data-tag="常用命令,redis"
+           data-author="" >
+            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
+            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
+        </a>
+        
+        <a  class="TCP/IP系列 "
+           href="/2019/11/23/tcp_nodelay_delayed_ack/"
+           data-tag="TCP/IP,TCP_NODELAY,延迟ACK"
+           data-author="" >
+            <span class="post-title" title="TCP_NODELAY和延迟ACK">TCP_NODELAY和延迟ACK</span>
+            <span class="post-date" title="2019-11-23 11:01:13">2019/11/23</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2019/12/29/redis1_build_cluster/"
+           data-tag="redis,docker compose,集群搭建"
+           data-author="" >
+            <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
+            <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/02/tech10_ha/"
+           data-tag="负载均衡"
+           data-author="" >
+            <span class="post-title" title="负载均衡知识总结">负载均衡知识总结</span>
+            <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/02/05/tech11_cache1/"
+           data-tag="缓存经典问题"
+           data-author="" >
+            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
+            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/22/tech1_db_split/"
+           data-tag="读写分离、垂直拆分、水平拆分、分库分表"
+           data-author="" >
+            <span class="post-title" title="读写分离、垂直拆分、水平拆分、分库分表">读写分离、垂直拆分、水平拆分、分库分表</span>
+            <span class="post-date" title="2020-01-22 17:03:33">2020/01/22</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/24/tech3_multi_room_living/"
+           data-tag="多机房,多活"
+           data-author="" >
+            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
+            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/23/tech2_wx_red_packet/"
+           data-tag="微信,红包"
+           data-author="" >
+            <span class="post-title" title="微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑">微信高并发资金交易系统设计方案-----百亿红包背后的技术支撑</span>
+            <span class="post-date" title="2020-01-23 17:55:26">2020/01/23</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/25/tech4_rpc/"
+           data-tag="RPC"
+           data-author="" >
+            <span class="post-title" title="RPC client异步收发核心细节">RPC client异步收发核心细节</span>
+            <span class="post-date" title="2020-01-25 12:18:12">2020/01/25</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/15/ds_link_list_circle/"
+           data-tag="单链表,环"
+           data-author="" >
+            <span class="post-title" title="判断单链表是否有环">判断单链表是否有环</span>
+            <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/26/tech5_thread_num/"
+           data-tag="线程数"
+           data-author="" >
+            <span class="post-title" title="线程数究竟设置多少合理？">线程数究竟设置多少合理？</span>
+            <span class="post-date" title="2020-01-26 16:32:07">2020/01/26</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/28/tech7_single_ha_pf/"
+           data-tag="单点,可用性,性能"
+           data-author="" >
+            <span class="post-title" title="单点系统架构的可用性和性能优化">单点系统架构的可用性和性能优化</span>
+            <span class="post-date" title="2020-01-28 09:48:07">2020/01/28</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/29/tech8_ha/"
+           data-tag="高可用"
+           data-author="" >
+            <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
+            <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/30/tech9_58pc/"
+           data-tag="长连接"
+           data-author="" >
+            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
+            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/10/tool2_gperftools/"
+           data-tag="gperftools,CPU profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之CPU Profile">gperftools之CPU Profile</span>
+            <span class="post-date" title="2019-09-10 22:55:47">2019/09/10</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/14/tool3_gperftools2/"
+           data-tag="gperftools,内存,heap profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之heap profile">gperftools之heap profile</span>
+            <span class="post-date" title="2019-09-14 23:36:27">2019/09/14</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/30/tool4_sar/"
+           data-tag="内存,sar,CPU,IO"
+           data-author="" >
+            <span class="post-title" title="sar查看内存、CPU、IO">sar查看内存、CPU、IO</span>
+            <span class="post-date" title="2019-10-30 08:02:03">2019/10/30</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/27/tech6_lb_ha1/"
+           data-tag="负载均衡,高可用"
+           data-author="" >
+            <span class="post-title" title="负载均衡和高可用介绍">负载均衡和高可用介绍</span>
+            <span class="post-date" title="2020-01-27 23:25:02">2020/01/27</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/10/09/tool1_perf/"
+           data-tag="perf"
+           data-author="" >
+            <span class="post-title" title="perf性能分析">perf性能分析</span>
+            <span class="post-date" title="2019-10-09 07:54:19">2019/10/09</span>
+        </a>
+        
+    </nav>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div class="post">
+    <div class="pjax">
+        <article id="post-tech10_ha" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">负载均衡知识总结</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            
+                <a href="javascript:" data-rel="技术文章阅读">技术文章阅读</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            
+            <a href="javascript:" class="color5">负载均衡</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+        创建时间:<time class="date" title='更新时间: 2020-02-02 14:21:53'>2020-02-02 10:13</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        <span>字数:6.3k</span>
+        
+        
+        <span id="busuanzi_container_page_pv">
+            阅读:<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+        <span class="top-comment" title="跳转至评论区">
+            <a href="#comments">
+                评论:<span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </a>
+        </span>
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-了解负载均衡"><span class="toc-text">1 了解负载均衡</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-总结"><span class="toc-text">2 总结</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-lvs为和不能完全替代DNS轮询？"><span class="toc-text">3 lvs为和不能完全替代DNS轮询？</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-问题"><span class="toc-text">3.1 问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-名词解释"><span class="toc-text">3.2 名词解释</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-3-接入层技术演进"><span class="toc-text">3.3 接入层技术演进</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-1-裸奔时代之单机架构"><span class="toc-text">3.3.1 裸奔时代之单机架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-2-简易扩容方案之DNS轮询"><span class="toc-text">3.3.2 简易扩容方案之DNS轮询</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-3-简易扩容方案之nginx"><span class="toc-text">3.3.3 简易扩容方案之nginx</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-4-高可用方案之keepalived"><span class="toc-text">3.3.4 高可用方案之keepalived</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-5-scale-up扩容方案之lvs-f5"><span class="toc-text">3.3.5 scale up扩容方案之lvs/f5</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-6-scale-out扩容方案之DNS轮询"><span class="toc-text">3.3.6 scale out扩容方案之DNS轮询</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-4-结论"><span class="toc-text">3.4 结论</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-如何实施异构服务器的负载均衡以及过载保护？"><span class="toc-text">4 如何实施异构服务器的负载均衡以及过载保护？</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-service层的负载均衡通常是怎么做的？"><span class="toc-text">4.1 service层的负载均衡通常是怎么做的？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-2-通过静态权重标识service的处理能力"><span class="toc-text">4.2 通过静态权重标识service的处理能力</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-3-通过动态权重标识service的处理能力"><span class="toc-text">4.3 通过动态权重标识service的处理能力</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-4-过载保护"><span class="toc-text">4.4 过载保护</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-5-如何借助动态权重来过载保护？"><span class="toc-text">4.5 如何借助动态权重来过载保护？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-6-总结"><span class="toc-text">4.6 总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#5-集群信息管理，架构设计中最容易遗漏的一环"><span class="toc-text">5 集群信息管理，架构设计中最容易遗漏的一环</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#5-1-集群概念"><span class="toc-text">5.1 集群概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-2-集群信息"><span class="toc-text">5.2 集群信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-3-存在什么问题？"><span class="toc-text">5.3 存在什么问题？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-4-如何集中化管理集群信息？"><span class="toc-text">5.4 如何集中化管理集群信息？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-5-总结"><span class="toc-text">5.5 总结</span></a></li></ol></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="1-了解负载均衡"><a href="#1-了解负载均衡" class="headerlink" title="1 了解负载均衡"></a>1 了解负载均衡</h1><p>负载均衡是分布式系统架构设计中必须考虑的因素之一，它通常是指将请求/数据&quot;均匀&quot;分摊到多个操作单元上执行，负载均衡的关键在于&quot;均匀&quot;。<br>  <img src="/pic/tech10_ha1.png" alt="常见的负载均衡方案"><br>常见的互联网分布式架构如上，分为客户端层、反向代理nginx层、站点层、服务层、数据层，可以看到每一个下游都有多个上游调用，只需要做到每个上游都均匀访问每一个下游，就能实现将请求/数据均匀分摊到多个操作单元上执行。</p>
+<p><strong>客户端层 ==&gt; 反向代理层的负载均衡</strong><br>  <img src="/pic/tech10_ha2.png" alt="客户端到反向代理层负载均衡"><br>客户端层到反向代理层的负载均衡，是通过DNS轮询实现：DNS server对于一个域名配置了多个解析ip，每次DNS解析请求来访问DNS server，会轮询返回这些ip，保证每个ip的解析概率相同，这些ip就是nginx的外网ip，以做到每台nginx的请求分配也是均衡的。</p>
+<p><strong>反向代理层 ==&gt; 站点层的负载均衡</strong><br>  <img src="/pic/tech10_ha3.png" alt="反向代理层到站点层负载均衡"><br>反向代理层到站点层的负载均衡，是通过nginx实现的，通过修改nginx.conf，可以实现多种负载均衡策略：<br>(1) 请求轮询：和DNS轮询类似，请求依次路由到各个web server；<br>(2) 最少连接路由：哪个web server的连接少，路由到那个web server；<br>(3) ip哈希：按照访问用户的ip哈希值来路由web server，只要用户的ip分布是均匀的，请求理论上也是均匀的，ip哈希均衡方法可以做到，同一个用户的请求固定落到同一台web server上，此策略适合有状态服务，例如session(58沈剑备注：可以这么做，但强烈不建议这么做，站点层无状态是分布式架构设计的基本原则之一，session最好放到数据层存储)。<br>(4) ...</p>
+<p><strong>站点层 ==&gt; 服务层的负载均衡</strong><br>  <img src="/pic/tech10_ha4.png" alt="站点层到服务层的负载均衡负载均衡"><br>站点层到服务层的负载均衡是通过&quot;服务连接池&quot;实现的，上游连接池会建立下游服务多个连接，每次请求会&quot;随机&quot;选取连接来访问下游服务。</p>
+<p><strong>数据层的负载均衡</strong><br>在数据量很大的情况下，由于数据层(db，cache)涉及数据的水平切分，所以数据层的负载均衡会复杂一些，它分为&quot;数据的均衡&quot;和&quot;请求的均衡&quot;。<br><strong>数据的均衡</strong>是指：水平切分后的每个服务(db，cache)，数据量是差不多的；<br><strong>请求的均衡</strong>是指：水平切分后的每个服务(db，cache)，请求量是差不多的；<br>业务常见的水平切分方式有如下几种：<br>(1) 按照range水平切分<br>  <img src="/pic/tech10_ha5.png" alt="range水平切分"><br>每个数据服务，存储一定范围的数据，上图为例：<br>user0服务，存储uid范围1-1kw；<br>user1服务，存储uid范围1kw-2kw；<br>此方案的好处是：<br>a. 规则简单，service只需要判断下uid范围就能路由到对应的存储服务；<br>b. 数据均衡性较好；<br>c. 比较容易扩展，可以随时加一个uid[2kw, 3kw]的数据服务；<br>不足之处：<br>a. 请求的负载不一定均衡，一般来说，新注册的用户会比老用户更活跃，大range服务请求压力会更大；</p>
+<p>(2) 按照id哈希水平切分<br>  <img src="/pic/tech10_ha6.png" alt="id哈希水平切分"><br>每个数据服务，存储某个key值hash后的部分数据，上图为例：<br>user0服务，存储偶数uid数据；<br>user1服务，存储奇数uid数据；<br>此方案的好处是：<br>a. 规则简单，service只需要对uid进行hash能路由到对应的存储服务；<br>b. 数据均衡性较好；<br>c. 请求均匀性较好；<br>不足之处：<br>a. 不容易扩展，扩展一个数据服务，hash方法改变的时候，可能需要进行数据迁移；</p>
+<h1 id="2-总结"><a href="#2-总结" class="headerlink" title="2 总结"></a>2 总结</h1><p>负载均衡(Load Balance)是分布式系统架构设计中必须考虑的因素之一，它通常是指，将请求/数据&quot;均匀&quot;分摊到多个操作单元上执行，负载均衡的关键在于&quot;均匀&quot;：<br>(1) 客户端层到反向代理层的负载均衡，是通过DNS轮询实现的；<br>(2) 反向代理层到站点层的负载均衡，是通过nginx实现的；<br>(3) 站点层到服务层的负载均衡，是通过服务连接池实现的；<br>(4) 数据层的负载均衡，要考虑&quot;数据的均衡&quot;与&quot;请求的均衡&quot;，常见的方式有&quot;按照范围水平切分&quot;与&quot;hash水平切分&quot;；</p>
+<h1 id="3-lvs为和不能完全替代DNS轮询？"><a href="#3-lvs为和不能完全替代DNS轮询？" class="headerlink" title="3 lvs为和不能完全替代DNS轮询？"></a>3 lvs为和不能完全替代DNS轮询？</h1><p>对于接入层负载均衡技术，部分同学持这样的观点：<br>(1) nginx前端加入lvs和keepalived可以替代DNS轮询；<br>(2) F5能搞定接入层高可用，扩展性，负载均衡，可以提点DNS轮询；<br>DNS轮询是否可以被其他方案替代？接入层架构技术演进，是本文将要细致讨论的内容。</p>
+<h2 id="3-1-问题"><a href="#3-1-问题" class="headerlink" title="3.1 问题"></a>3.1 问题</h2><p>nginx、lvs、keepalived、f5、DNS轮询，每当提到这些技术，往往讨论的是接入层的几个问题：<br>(1) 可用性：任何一台机器挂了，服务受不受影响；<br>(2) 扩展性：能否通过增加机器，扩充系统的性能；<br>(3) 反向代理 + 负载均衡：请求是否均匀分摊到后盾的操作单元执行；</p>
+<h2 id="3-2-名词解释"><a href="#3-2-名词解释" class="headerlink" title="3.2 名词解释"></a>3.2 名词解释</h2><p>(1) nginx：一个高性能的web server和实时反向代理的软件；<br>(2) lvs：使用集群技术，实现在linux操作系统层面的一个高性能、高可用、负载均衡服务器；<br>(3) keepalived：一款用来检测服务状态存活性的软件，常用来做高可用；<br>(4) f5：一个高性能、高可用、负载均衡的硬件设备；<br>(5) DNS轮询：通过在DNS server上对一个域名配置多个ip解析，来扩充web server性能及实施负载均衡的技术；</p>
+<h2 id="3-3-接入层技术演进"><a href="#3-3-接入层技术演进" class="headerlink" title="3.3 接入层技术演进"></a>3.3 接入层技术演进</h2><h3 id="3-3-1-裸奔时代之单机架构"><a href="#3-3-1-裸奔时代之单机架构" class="headerlink" title="3.3.1 裸奔时代之单机架构"></a>3.3.1 裸奔时代之单机架构</h3><p>  <img src="/pic/tech10_ha7.png" alt="单机架构"><br>裸奔时代的架构图如上：<br>(1) 浏览器通过DNS server，域名解析到IP；<br>(2) 浏览器通过IP访问web server；</p>
+<p><strong>缺点</strong><br>(1) 非高可用，web server挂了整个系统就挂了；<br>(2) 扩展性差，当吞吐量达到web server上限时，无法扩容；<br>注：单机不涉及负载均衡问题；</p>
+<h3 id="3-3-2-简易扩容方案之DNS轮询"><a href="#3-3-2-简易扩容方案之DNS轮询" class="headerlink" title="3.3.2 简易扩容方案之DNS轮询"></a>3.3.2 简易扩容方案之DNS轮询</h3><p>假设tomcat的吞吐量为1000次每秒，当系统总吞吐量达到3000时，如何扩容是首先要解决的问题，DNS轮询是一个很容易想到的方案：<br>  <img src="/pic/tech10_ha8.png" alt="DNS轮询"><br>此时的架构图如上：<br>(1) 多部署几份web server，1个tomcat抗1000，部署3个就能抗3000；<br>(2) 在DNS server层面，域名每次解析到不同的ip；</p>
+<p><strong>优点</strong><br>(1) 零成本，在DNS server上多配置几个ip即可，功能也不收费；<br>(2) 部署简单，多部署几个web server即可，原系统架构不需要做任何改造；<br>(3) 负载均衡，变成了多机，但负载基本均衡；</p>
+<p><strong>缺点</strong><br>(1) 非高可用：DNS server只负责域名解析ip，这个ip对应的服务是否可用，DNS server是不保证的，假设有一个web server挂了，部分服务会受到影响；<br>(2) 扩容非实时：DNS解析有一个生效周期；<br>(3) 暴露了太多的外网ip；</p>
+<h3 id="3-3-3-简易扩容方案之nginx"><a href="#3-3-3-简易扩容方案之nginx" class="headerlink" title="3.3.3 简易扩容方案之nginx"></a>3.3.3 简易扩容方案之nginx</h3><p>tomcat性能较差，但nginx作为反向代理的性能就强多了，假设线上跑到1w，就比tomcat高了10倍，可以利用这个特性来做扩容：<br>  <img src="/pic/tech10_ha9.jpg" alt="nginx反向代理"><br>此时的架构图如上：<br>(1) 站点层与浏览器层之间加入了一个反向代理层，利用高性能的nginx来做反向代理；<br>(2) nginx将http请求分发给后端多个web server；</p>
+<p><strong>优点</strong><br>(1) DNS server不需要改动；<br>(2) 负载均衡：通过nginx来保证；<br>(3) 只暴露一个外网ip：nginx到tomcat之间使用内网访问；<br>(4) 扩容实时：nginx内部可控，随时增加web server随时实时扩容；<br>(5) 能够保证站点层的可用性：任何一台tomcat挂了，nginx可以将流量迁移到其他tomcat；</p>
+<p><strong>缺点</strong><br>(1) 时延增加，架构复杂了：中间多加了一个反向代理层；<br>(2) 反向代理层成了单点，非高可用：tomcat挂了不影响服务，nginx挂了怎么办？</p>
+<h3 id="3-3-4-高可用方案之keepalived"><a href="#3-3-4-高可用方案之keepalived" class="headerlink" title="3.3.4 高可用方案之keepalived"></a>3.3.4 高可用方案之keepalived</h3><p>为了解决高可用问题，keepalived出场了：<br>  <img src="/pic/tech10_ha10.jpg" alt="keepalived高可用"><br>此时：<br>(1) 做两台nginx组成一个集群，分别部署上keepalived，设置为相同的虚ip，保证nginx高可用；<br>(2) 当一台nginx挂了，keepalived能够探测到，并将流量自动迁移到另一台nginx上，整个过程对调用方透明；<br>  <img src="/pic/tech10_ha11.jpg" alt="keepalived故障迁移"><br><strong>优点</strong><br>(1) 解决了高可用问题；</p>
+<p><strong>缺点</strong><br>(1) 资源利用率只有50%；<br>(2) nginx仍然是接入单点，如果接入吞吐量超过nginx的性能怎么办？例如QPS达到了5W？</p>
+<h3 id="3-3-5-scale-up扩容方案之lvs-f5"><a href="#3-3-5-scale-up扩容方案之lvs-f5" class="headerlink" title="3.3.5 scale up扩容方案之lvs/f5"></a>3.3.5 scale up扩容方案之lvs/f5</h3><p>nginx毕竟是软件，性能比tomcat好，但总有个上限，超出上限，还是抗不住；</p>
+<p>lvs就不一样了，它实施在操作系统层面；f5的性能就更好了，它实施在硬件层面，他们性能比nginx好很多，例如每秒可以抗10w，这样可以利用他们来扩容，常见的架构图如下：<br>  <img src="/pic/tech10_ha12.jpg" alt="lvs scale up"><br>此时：<br>(1) 与通过nginx可以扩展多个tomcat一样，可以通过lvs来扩展多个nginx；<br>(2) 通过keepalived + VIP的方案可以保证高可用；<br>99.9999%的公司到这一步基本就能解决接入层高可用、扩展性、负载均衡的问题。</p>
+<p>这就完美了吗？<br>不管是lvs还是f5，这些都是scale up方案，根本上lvs/f5还是会有性能上限，假设每秒能处理10w的请求，一天也只能处理80亿的请求(10w秒吞吐量*8w秒)，那万一系统的日PV超过80亿怎么办呢？（好吧，没几个公司要考虑这个问题）</p>
+<h3 id="3-3-6-scale-out扩容方案之DNS轮询"><a href="#3-3-6-scale-out扩容方案之DNS轮询" class="headerlink" title="3.3.6 scale out扩容方案之DNS轮询"></a>3.3.6 scale out扩容方案之DNS轮询</h3><p>如前所述，水平扩展才是解决性能问题的根本方案，能够通过加机器扩充性能的方案才具备最好的扩展性。<br>facebook，google，baidu的日PV是不是超过80亿？ 它们的域名只对应一个ip？ 终点又是起点，还是得通过DNS轮询来进行扩容：<br>  <img src="/pic/tech10_ha13.jpg" alt="DNS scale out"><br>此时：<br>(1) 通过DNS轮询来线性扩展入口lvs层的性能；<br>(2) 通过keepalived来保证高可用；<br>(3) 通过lvs来扩展多个nginx；<br>(4) 通过nginx来做负载均衡，业务七层路由；</p>
+<h2 id="3-4-结论"><a href="#3-4-结论" class="headerlink" title="3.4 结论"></a>3.4 结论</h2><p>(1) 接入层架构要考虑的问题域为：高可用、扩展性、反向代理+扩展均衡；<br>(2) nginx、keepalived、lvs、f5可以很好的解决高可用、扩展性、反向代理+扩展均衡的问题；<br>(3) 水平扩展scale out是解决扩展性问题的根本方案，DNS轮询是不能完全被nginx/lvs/f5所替代；</p>
+<h1 id="4-如何实施异构服务器的负载均衡以及过载保护？"><a href="#4-如何实施异构服务器的负载均衡以及过载保护？" class="headerlink" title="4 如何实施异构服务器的负载均衡以及过载保护？"></a>4 如何实施异构服务器的负载均衡以及过载保护？</h1><p>后端service有可能部署在硬件条件不同的服务器上：<br>(1) 如果对标最低配的服务器&quot;均匀&quot;分摊负载，高配的服务器的利用率不足；<br>(2) 如果对标最高配的服务器&quot;均匀&quot;分摊负载，低配的服务器可能会扛不住；<br>能否根据异构服务器的处理能力来动态、自适应进行负载均衡及过载保护，是这里要讨论的问题。</p>
+<h2 id="4-1-service层的负载均衡通常是怎么做的？"><a href="#4-1-service层的负载均衡通常是怎么做的？" class="headerlink" title="4.1 service层的负载均衡通常是怎么做的？"></a>4.1 service层的负载均衡通常是怎么做的？</h2><p>  <img src="/pic/tech10_ha14.jpg" alt="service层负载均衡"><br>service层的负载均衡，一般是通过service连接池来实现的，调用方连接池会建立与下游服务多个连接，每次请求&quot;随机&quot;获取连接，来保证service访问的均衡性；负载均衡、故障转移、超时处理等细节也都是通过调用方连接池来实现的。这个调用方连接池能否实现，根据service的处理能力，动态+自适应的进行负载调度呢？</p>
+<h2 id="4-2-通过静态权重标识service的处理能力"><a href="#4-2-通过静态权重标识service的处理能力" class="headerlink" title="4.2 通过静态权重标识service的处理能力"></a>4.2 通过静态权重标识service的处理能力</h2><p>  <img src="/pic/tech10_ha15.jpg" alt="静态权重负载均衡"></p>
+<p>调用方通过连接池组件访问下游service，通常采用&quot;随机&quot;的方式返回连接，以保证下游service访问的均衡性。要打破这个随机性，最容易想到的方法，只要为每个下游service设置一个权重，代表service的处理能力，来调整访问到每个service的概率，例如：<br>假设service-ip1，service-ip2，service-ip3的处理能力相同，可以设置weight1=1，weight2=1，weight3=1，这样三个service连接被获取到的概率分别就是1/3，1/3，1/3，能够保证均衡访问。<br>假设service-ip1的处理能力是service-ip2，service-ip3的处理能力的2倍，可以设置weight1=2，weight2=1，weight3=1，这样三个service连接被获取到的概率分别就是2/4，1/4，1/4，能够保证处理能力强的service分别到等比的流量，不至于资源浪费。</p>
+<p>使用nginx做反向代理与负载均衡，就有类似的机制。</p>
+<p>这个方案的优点是：简单，能够快速的实现异构服务器的负载均衡。<br>缺点也很明显：这个权重是固定的，无法自适应动态调整，而很多时候，服务器的处理能力是很难用一个固定的数值量化。</p>
+<h2 id="4-3-通过动态权重标识service的处理能力"><a href="#4-3-通过动态权重标识service的处理能力" class="headerlink" title="4.3 通过动态权重标识service的处理能力"></a>4.3 通过动态权重标识service的处理能力</h2><p>提问：通过什么来标识一个service的处理能力呢？<br>回答：其实一个service能不能处理得过来，能不能响应得过来，应该由调用方说了算。调用服务，快速处理了，处理能力跟得上；调用服务，处理超时了，处理能力很有可能跟不上了。</p>
+<p>动态权重设计<br>(1) 用一个动态权重来标识每个service的处理能力，默认初始处理能力相同，即分配给每个service的概率相等；<br>(2) 每当service成功处理一个请求，认为service处理能力足够，权重动态+1；<br>(3) 每当service超时处理一个请求，认为service处理能力可能要跟不上了，权重动态-10(权重下降会更快)；<br>(4) 为了方便权重的处理，可以把权重的范围限定为[0, 100]，把权重的初始值设为60分；</p>
+<p>举例说明：<br>假设service-ip1，service-ip2，service-ip3的动态权重初始值weight1=weight2=weight3=60，刚开始时，请求分配给这3台service的概率分别是60/180，60/180，60/180，即负载是均衡的。</p>
+<p>随着时间的推移，处理能力强的service成功处理的请求越来越多，处理能力弱的service偶尔有超时，随着动态权重的增减，权重可能变化成了weight1=100，weight2=60，weight3=40，那么此时，请求分配给这3台service的概率分别是100/200，60/200，40/200，即处理能力强的service会被分配到更多的流量。</p>
+<h2 id="4-4-过载保护"><a href="#4-4-过载保护" class="headerlink" title="4.4 过载保护"></a>4.4 过载保护</h2><p>提问：什么是过载保护？<br>  <img src="/pic/tech10_ha16.jpg" alt="无过载保护"><br><strong>图示：无过载保护的负载与处理能力图(会掉底)</strong></p>
+<p>回答：互联网软件架构设计中所指的过载保护，是指当系统负载超过一个service的处理能力时，如果service不进行自我保护，可能导致对外呈现处理能力为0，且不能自动恢复的现象；而service的过载保护，是指即使系统负载超过一个service的处理能力，service仍能保证对外提供有损的稳定服务。<br>  <img src="/pic/tech10_ha17.jpg" alt="有过载保护"><br><strong>图示：有过载保护的负载与处理能力图(不会掉底)</strong></p>
+<p>提问：如何进行过载保护？<br>回答：最简易的方式，服务端设定一个负载阈值，超过这个阈值的请求压过来，全部抛弃，这个方式不是特别优雅。</p>
+<h2 id="4-5-如何借助动态权重来过载保护？"><a href="#4-5-如何借助动态权重来过载保护？" class="headerlink" title="4.5 如何借助动态权重来过载保护？"></a>4.5 如何借助动态权重来过载保护？</h2><p>动态权重是用来标识每个service的处理能力的一个值，它是RPC-client客户端连接池层面的一个东西，服务端处理超时，客户端RPC-client连接池能够知道，这里只要实施一些策略，就能够对疑似过载的服务器进行降压，而不用服务器抛弃请求这么粗暴的实施过载保护。</p>
+<p>应该实施一些什么样的策略呢？例如：</p>
+<p>(1) 如果某一个service的连接上，连续3个请求都超时，即连续-10分三次，客户端就可以认为，服务器慢慢的要处理不过来了，得给这个service缓一小口气，于是设定策略：接下来的若干时间内，例如1秒(或者接下来的若干个请求)，请求不再分配给这个service；<br>(2) 如果某一个service的动态权重，降为了0(连续10个请求超时，中间休息了3次还超时)，客户端就可以认为，服务器完全处理不过来了，得给这个service喘一大口气，于是设定策略：接下来的若干时间内，例如1分钟(为什么是1分钟？根据经验，此时service一般在发生fullGC，差不多1分钟能恢复过来)，请求不再分配给这个service；<br>(3) 可以有更复杂的保护策略…</p>
+<p>这样的话，不但能借助动态权重来实施动态自适应的异构服务器负载均衡，还能在客户端层面更优雅的实施过载保护，在某个下游service快要响应不过来的时候，给其恢复的机会。需要注意的是：要防止客户端的过载保护引起service的雪崩，如果整体负载已经超过了service集群的处理能力，怎么转移请求也是处理不过来的，还得通过抛弃请求来实施自我保护。</p>
+<h2 id="4-6-总结"><a href="#4-6-总结" class="headerlink" title="4.6 总结"></a>4.6 总结</h2><p>(1) service的负载均衡、故障转移、超时处理通常是RPC-client连接池层面来实施的；<br>(2) 异构服务器负载均衡，最简单的方式是静态权重法，缺点是无法自适应动态调整；<br>(3) 动态权重法，可以动态的根据service的处理能力来分配负载，需要有连接池层面的微小改动；<br>(4) 过载保护，是在负载过高时，service为了保护自己，保证一定处理能力的一种自救方法；<br>(5) 动态权重法，还可以用做service的过载保护；</p>
+<h1 id="5-集群信息管理，架构设计中最容易遗漏的一环"><a href="#5-集群信息管理，架构设计中最容易遗漏的一环" class="headerlink" title="5 集群信息管理，架构设计中最容易遗漏的一环"></a>5 集群信息管理，架构设计中最容易遗漏的一环</h1><h2 id="5-1-集群概念"><a href="#5-1-集群概念" class="headerlink" title="5.1 集群概念"></a>5.1 集群概念</h2><p>互联网典型的分层架构如下：<br>  <img src="/pic/tech10_ha18.png" alt="互联网典型的分层架构"><br>web server层；<br>service层；<br>db层与cache层；<br>为了保证高可用，每一个站点、服务、数据库、缓存都会冗余多个实例，组成一个分布式的系统，集群则是一个分布式的物理形态，通俗的说，集群就是一堆机器，上面部署了提供相似功能的站点，服务，数据库，或者缓存。<br>  <img src="/pic/tech10_ha19.jpg" alt="集群"></p>
+<p>web集群，由web.1和web.2两个实例组成；<br>service集群，由service.1/service.2/service.3三个实例组成；<br>db集群，由mysql-M/mysql-S1/mysql-S2三个实例组成；<br>cache集群，由cache-M/cache-S两个实例组成；</p>
+<p>与集群相对应的是单机。<br>画外音：关于高可用架构，详见文章&lt;究竟啥才是互联网架构高可用&gt;。<br>画外音：缓存如果没有高可用要求，可能是单机架构，而不是集群。</p>
+<h2 id="5-2-集群信息"><a href="#5-2-集群信息" class="headerlink" title="5.2 集群信息"></a>5.2 集群信息</h2><p><strong>什么是集群信息？</strong><br>一个集群，会包含若干信息，例如：</p>
+<p>集群名称<br>IP列表，建议使用内网域名，而不是直接使用IP<br>二进制目录<br>配置目录<br>日志目录<br>负责人列表</p>
+<p><strong>什么时候会用到集群信息？</strong></p>
+<p>很多场景，特别是线上操作，都会使用到各种集群信息，例如：</p>
+<p>自动化上线<br>监控<br>日志清理<br>二进制与配置的备份<br>下游的调用</p>
+<p>这些场景，分别都是如何读取集群信息的？</p>
+<p>一般来说，早期会把集群信息写在配置文件里；<br>例如，自动化上线，有一个配置文件deploy.user.service.config，其内容是：</p>
+<pre><code>name : user.service
+ip.list : ip1, ip2, ip3
+bin.path : /user.service/bin/
+ftp.path : ftp://192.168.0.1/USER_2_0_1_3/user.exe</code></pre><p>自动化上线的过程则是：<br>把可执行文件从ftp拉下来；<br>读取集群IP列表；<br>读取二进制应该部署的目录；<br>把二进制部署到线上；<br>逐台重启；</p>
+<p>画外音：还没有实现自动化脚本部署？还处在运维ssh到线上，手动执行命令，逐台机器人功部署的刀耕火种阶段？赶紧照着这个方案，做自动化改造吧。</p>
+<p>又例如，web-X调用下游的user服务，又有一个配置文件web-X.config，其内容配置了：</p>
+<pre><code>service.name : user.service
+service.ip.list : ip1, ip2, ip3
+service.port : 8080</code></pre><p>web-X调用user服务的过程则是：<br>web-X启动；<br>web-X读取user服务集群的IP列表与端口；<br>web-X初始化user服务连接池；<br>web-X拿取user服务的连接，通过RPC接口调用user服务；</p>
+<p>日志清理，服务监控，二进制备份的过程，也都与上述类似。</p>
+<h2 id="5-3-存在什么问题？"><a href="#5-3-存在什么问题？" class="headerlink" title="5.3 存在什么问题？"></a>5.3 存在什么问题？</h2><p>上述业务场景，对于集群信息的使用，有两个最大的特点：<br>每个应用场景，所需集群信息都不一样(A场景需要集群abc信息，B场景需要集群def信息)；<br>每个应用场景，集群信息都写在&quot;自己&quot;的配置文件里；</p>
+<p><strong>一句话总结：集群信息管理分散化</strong></p>
+<p>这里最大的问题，是耦合，当集群的信息发生变化的时候，有非常多的配置需要修改：</p>
+<pre><code>deploy.user.service.config
+clean.log.user.service.config
+backup.bin.user.service.config
+monitor.config
+web-X.config
+…</code></pre><p>这些配置里，user服务集群的信息都需要修改：<br>随着研发、测试、运维人员的流动，很多配置放在哪里，逐步就被遗忘了；<br>随着时间的推移，一些配置就被改漏了；<br>逐渐的，莫名其妙的问题出现了；</p>
+<p>如何解决上述耦合的问题呢？<br><strong>一句话回答：集群信息管理集中化</strong></p>
+<h2 id="5-4-如何集中化管理集群信息？"><a href="#5-4-如何集中化管理集群信息？" class="headerlink" title="5.4 如何集中化管理集群信息？"></a>5.4 如何集中化管理集群信息？</h2><p><strong>早期方案</strong></p>
+<p>通过全局配置文件，实现集群信息集中管理，举例global.config如下：</p>
+<pre><code>[user.service]
+ip.list : ip1, ip2, ip3
+port : 8080
+bin.path : /user.service/bin/
+log.path : /user.service/log/
+conf.path : /user.service/conf/
+ftp.path :ftp://192.168.0.1/USER_2_0_1_3/user.exe
+owner.list : shenjian, zhangsan, lisi
+
+[passport.web]
+ip.list : ip11, ip22, ip33
+port : 80
+bin.path : /passport.web/bin/
+log.path : /passport.web/log/
+conf.path : /passport.web/conf/
+ftp.path :ftp://192.168.0.1/PST_1_2_3_4/passport.jar
+owner.list : shenjian, zui, shuaiqi</code></pre><p>集中维护集群信息之后：<br>任何需要读取集群信息的场景，都从global.config里读取；<br>任何集群信息的修改，只需要修改global.config一处；<br>global.config会部署到任何一台线上机器，维护和管理也很方便；<br>当然信息太多的话，global.config也要垂直拆分。</p>
+<p><strong>中期方案</strong><br>随着公司业务的发展、技术团队的扩充和技术体系的完善，通过集群信息管理服务，来维护集群信息的诉求越来越强烈，配置越多，通过global.config来修改配置越容易出错。<br>  <img src="/pic/tech10_ha20.png" alt="集群信息管理"><br>如上图，建立集群信息管理服务：<br>info.db ：存储集群信息；<br>info.cache ：缓存集群信息；<br>info.service ：提供集群信息访问的RPC接口，以及HTTP接口；<br>info.web ：集群信息维护后台；</p>
+<p>服务的核心接口是：<br>Info InfoService::getInfo(String ClusterName);<br>Bool InfoService::setInfo(String ClusterName, String key, String value);</p>
+<p>然后，统一通过服务来获取与修改集群信息：<br>所有需要获取集群信息的场景，都通过info.service提供的接口来读取集群信息；<br>所有需要修改集群信息的场景，都通过info.web来操作；</p>
+<p><strong>长期方案</strong><br>集群信息服务可以解决大部分的耦合问题，但仍然有一个不足：集群信息变更时，无法反向实时通知关注方，集群信息发生了改变，更长远的，要引入配置中心来解决。<br>  <img src="/pic/tech10_ha21.png" alt="配置中心"><br>配置中心的细节，网上的分析很多，这里暂不展开。</p>
+<h2 id="5-5-总结"><a href="#5-5-总结" class="headerlink" title="5.5 总结"></a>5.5 总结</h2><p>集群信息管理，是架构设计中非常容易遗漏的一环，但又是非常基础，非常重要的基础设施，一定要在早期规划好：</p>
+<ul>
+<li>传统的方式，分散化管理集群信息，容易导致耦合；</li>
+<li>集中管理集群信息，有全局配置，信息服务，配置中心三个阶段；</li>
+</ul>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至yj.mapple@gmail.com </span>
+    </div>
+</article>
+
+
+<p>
+    <a href="javascript:void(0)" class="dashang" onclick="dashangToggle()">赏</a>
+</p>
+
+
+<div class="article_copyright">
+    <p><span class="copy-title">文章标题:</span>负载均衡知识总结</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">6.3k</span></p>
+    <p><span class="copy-title">本文作者:</span><a href="javascript:void(0)" title="melonshell">melonshell</a></p>
+    <p><span class="copy-title">发布时间:</span>2020-02-02, 10:13:14</p>
+    <p><span class="copy-title">最后更新:</span>2020-02-02, 14:21:53</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2020/02/02/tech10_ha/" title="负载均衡知识总结">http://melonshell.github.io/2020/02/02/tech10_ha/</a>
+    <p>
+        <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+    </p>
+</div>
+
+
+
+    <div id="comments"></div>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+
+<script type="text/javascript">
+    $.getScript('/js/gitalk.js', function () {
+        var gitalk = new Gitalk({
+            clientID: 'e97d9b9b791221194492',
+            clientSecret: 'c3930f83c344398e78fe43dff9bd0af7ce3024ab',
+            repo: 'melonshell.github.io',
+            owner: 'melonshell',
+            admin: ['melonshell'],
+            id: decodeURI(location.pathname),
+            distractionFreeMode: 'true',
+            language: 'zh-CN',
+            perPage: parseInt('10',10)
+        })
+        gitalk.render('comments')
+    })
+</script>
+
+
+
+
+    
+        <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+<input type="hidden" id="MathJax-js"
+        value="//cdn.bootcss.com/mathjax/2.7.2/MathJax.js?config=TeX-MML-AM_CHTML">
+</input>
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry">©2019-2099 melonshell</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full"><span class="min "></span></button>
+<button class="post-toc-menu"><span class="post-toc-menu-icons"></span></button>
+<div class="post-toc"><span class="post-toc-title">目录</span>
+    <div class="post-toc-content">
+
+    </div>
+</div>
+<a class="" id="rocket" href="javascript:void(0)"></a>
+    </div>
+</div>
+<div class="acParent"></div>
+
+<div class="hide_box" onclick="dashangToggle()"></div>
+<div class="shang_box">
+    <a class="shang_close" href="javascript:void(0)" onclick="dashangToggle()">×</a>
+    <div class="shang_tit">
+        <p>喜欢就点赞,疼爱就打赏</p>
+    </div>
+    <div class="shang_payimg">
+        <div class="pay_img">
+            <img src="/img/alipay.jpg" class="alipay" title="扫码支持">
+            <img src="/img/weixin.jpg" class="weixin" title="扫码支持">
+        </div>
+    </div>
+    <div class="shang_payselect">
+        <span><label><input type="radio" name="pay" checked value="alipay">支付宝</label></span><span><label><input type="radio" name="pay" value="weixin">微信</label></span>
+    </div>
+</div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.0.1" ></script>
+
+<script src="/js/script.js?v=1.0.1" ></script>
+<script>
+    var img_resize = 'default';
+    /*作者、标签的自动补全*/
+    $(function () {
+        $('.search').AutoComplete({
+            'data': ['#cpu','#分支预测','#缓存淘汰算法','#bloom filter','#堆','#堆排序','#lower_bound','#upper_bound','#查找','#旋转数组','#非递归遍历','#查找第k大数','#go','#channel','#error','#select','#nil','#gdb','#接收者','#常用命令','#redis','#TCP/IP','#TCP_NODELAY','#延迟ACK','#docker compose','#集群搭建','#负载均衡','#缓存经典问题','#读写分离、垂直拆分、水平拆分、分库分表','#多机房','#多活','#微信','#红包','#RPC','#单链表','#环','#线程数','#单点','#可用性','#性能','#高可用','#长连接','#gperftools','#CPU profile','#内存','#heap profile','#sar','#CPU','#IO','#perf',],
+            'itemHeight': 20,
+            'width': 418
+        }).AutoComplete('show');
+    })
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $(".post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+        $("input[name=pay]").on("click", function () {
+            if($("input[name=pay]:checked").val()=="weixin"){
+                $(".shang_box .shang_payimg .pay_img").addClass("weixin_img");
+            } else {
+                $(".shang_box .shang_payimg .pay_img").removeClass("weixin_img");
+            }
+        })
+        
+
+        /*高亮代码块行号*/
+        
+        $('pre code').each(function(){
+            var lines = $(this).text().split('\n').length - 1, widther='';
+            if (lines>99) {
+                widther = 'widther'
+            }
+            var $numbering = $('<ul/>').addClass('pre-numbering ' + widther).attr("unselectable","on");
+            $(this).addClass('has-numbering ' + widther)
+                    .parent()
+                    .append($numbering);
+            for(var i=1;i<=lines;i++){
+                $numbering.append($('<li/>').text(i));
+            }
+        });
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+    function dashangToggle() {
+        $(".shang_box").fadeToggle();
+        $(".hide_box").fadeToggle();
+    }
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<style>
+    pre{
+        position: relative;
+        margin-bottom: 24px;
+        border-radius: 10px;
+        border: 1px solid #e2dede;
+        background: #FFF;
+        overflow: hidden;
+    }
+    code.has-numbering{
+        margin-left: 30px;
+    }
+    code.has-numbering.widther{
+        margin-left: 35px;
+    }
+    .pre-numbering{
+        margin: 0px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 20px;
+        padding: 0.5em 3px 0.7em 5px;
+        border-right: 1px solid #C3CCD0;
+        text-align: right;
+        color: #AAA;
+        background-color: #fafafa;
+    }
+    .pre-numbering.widther {
+        width: 35px;
+    }
+</style>
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+        .nav .hide-list.fullscreen {
+            left: 492px
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+    .post .pjax article .article-entry>ol, .post .pjax article .article-entry>ul, .post .pjax article>ol, .post .pjax article>ul{
+        border: #e2dede solid 1px;
+        border-radius: 10px;
+        padding: 10px 32px 10px 56px;
+    }
+    .post .pjax article .article-entry li>ol, .post .pjax article .article-entry li>ul,.post .pjax article li>ol, .post .pjax article li>ul{
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .post .pjax article .article-entry>ol>li, .post .pjax article .article-entry>ul>li,.post .pjax article>ol>li, .post .pjax article>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    .post .pjax article .article-entry li>ol>li, .post .pjax article .article-entry li>ul>li,.post .pjax article li>ol>li, .post .pjax article li>ul>li{
+        margin-bottom: auto;
+        margin-left: auto;
+    }
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+    .nav-right:before {
+        content: ' ';
+        display: block;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.3;
+        background: url("https://i.loli.net/2019/07/22/5d3521411f3f169375.png");
+        background-repeat: no-repeat;
+        background-position: 50% 0;
+        -ms-background-size: cover;
+        -o-background-size: cover;
+        -moz-background-size: cover;
+        -webkit-background-size: cover;
+        background-size: cover;
+    }
+    
+
+    
+</style>
+
+
+
+
+
+
+<div class="mobile-menus-out" >
+
+</div>
+<div class="mobile-menus">
+    
+    
+    <a class="dynamic-menu site_url"   href="/photo">相册</a>
+    
+    
+    
+</div>
+
+
+</html>
