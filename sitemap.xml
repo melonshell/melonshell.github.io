@@ -2,6 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://melonshell.github.io/2020/04/04/go12_C_Polymorphism/</loc>
+    
+    <lastmod>2020-04-04T16:26:01.051Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/03/27/go11_3dot/</loc>
+    
+    <lastmod>2020-03-27T08:29:58.234Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/02/11/dev-tool/</loc>
+    
+    <lastmod>2020-02-11T10:01:48.221Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://melonshell.github.io/2020/02/07/ds_cache_eli/</loc>
     
     <lastmod>2020-02-07T14:47:40.476Z</lastmod>
