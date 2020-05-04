@@ -38,6 +38,12 @@ close方法可以关闭channel；
 v, ok := <-ch
 close调用之后继续从channel读取，如果buffer中还有数据未读完，则v返回数据，ok为true；如果buffer中数据已读完，则v返回零值，ok为false；
 
+操作    | nil channel | closed channel | not-closed non-nil channel
+:-:     |    :-:      |      :-:       |      :-:
+close   |  panic      |  panic         | 成功close
+写ch <- | 一直阻塞     |  panic         | 阻塞或成功写入数据
+读<- ch | 一直阻塞     | 读取对应类型零值 |阻塞或成功读取数据
+
 # 4 channel特性
 1) 线程安全；
 2) 可以作为一个FIFO队列，接收和发送的数据顺序一致；
