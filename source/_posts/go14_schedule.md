@@ -8,7 +8,7 @@ tags:
 ---
 
 # 系统调用
-sysmon线程会监控所有执行syscall的线程M，一旦超过某个时间阈值，就将该M与对应的P解耦；
+sysmon线程会监控所有执行syscall的线程M，一旦超过某个时间阈值，就将该M与对应的P剥离；
 
 # cgo
 cgo的m，cgo的调用实际上使用了lockedm和syscall；
