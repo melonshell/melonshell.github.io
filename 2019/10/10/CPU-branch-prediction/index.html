@@ -6,18 +6,18 @@
   <meta name="keywords" content=" cpu , 分支预测 ">
   <meta name="description" content="CPU分支预测 | Hexo">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="description" content="系统调用sysmon线程会监控所有执行syscall的线程M，一旦超过某个时间阈值，就将该M与对应的P解耦； cgocgo的m，cgo的调用实际上使用了lockedm和syscall；g陷入cgocall: lockedm加上syscall的处理逻辑； m陷入cgo和syscall时，p的状态会被设置为_Psyscall，sysmon周期性地检查并retake p，如果发现p处于这个状态且超过10">
+<meta name="description" content="struct{}struct{}类型的占用内存大小为0： unsafe.Sizeof(struct{}{}) //输出结果：0  用于控制而非数据信息：chan struct{} 实现C++的set：map[string]struct{}  interface{}空interface没有方法，故所有类型均实现了interface(包括值接收者和指针接收者);">
 <meta name="keywords" content="go">
 <meta property="og:type" content="article">
-<meta property="og:title" content="go调度">
-<meta property="og:url" content="http://melonshell.github.io/2020/06/06/go14_schedule/index.html">
+<meta property="og:title" content="go empty struct和interface">
+<meta property="og:url" content="http://melonshell.github.io/2020/07/01/go16_empty_struct_interface/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="系统调用sysmon线程会监控所有执行syscall的线程M，一旦超过某个时间阈值，就将该M与对应的P解耦； cgocgo的m，cgo的调用实际上使用了lockedm和syscall；g陷入cgocall: lockedm加上syscall的处理逻辑； m陷入cgo和syscall时，p的状态会被设置为_Psyscall，sysmon周期性地检查并retake p，如果发现p处于这个状态且超过10">
+<meta property="og:description" content="struct{}struct{}类型的占用内存大小为0： unsafe.Sizeof(struct{}{}) //输出结果：0  用于控制而非数据信息：chan struct{} 实现C++的set：map[string]struct{}  interface{}空interface没有方法，故所有类型均实现了interface(包括值接收者和指针接收者);">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2020-06-06T14:59:22.131Z">
+<meta property="og:updated_time" content="2020-07-01T12:13:42.551Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="go调度">
-<meta name="twitter:description" content="系统调用sysmon线程会监控所有执行syscall的线程M，一旦超过某个时间阈值，就将该M与对应的P解耦； cgocgo的m，cgo的调用实际上使用了lockedm和syscall；g陷入cgocall: lockedm加上syscall的处理逻辑； m陷入cgo和syscall时，p的状态会被设置为_Psyscall，sysmon周期性地检查并retake p，如果发现p处于这个状态且超过10">
+<meta name="twitter:title" content="go empty struct和interface">
+<meta name="twitter:description" content="struct{}struct{}类型的占用内存大小为0： unsafe.Sizeof(struct{}{}) //输出结果：0  用于控制而非数据信息：chan struct{} 实现C++的set：map[string]struct{}  interface{}空interface没有方法，故所有类型均实现了interface(包括值接收者和指针接收者);">
 
 
 <link rel="icon" href="/img/avatar.jpg">
@@ -102,7 +102,15 @@
 
 
 <ul>
-    <li><div class="all active">全部文章<small>(48)</small></div></li>
+    <li><div class="all active">全部文章<small>(51)</small></div></li>
+    
+        
+            
+            <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
+                
+            </li>
+            
+        
     
         
             
@@ -115,14 +123,6 @@
         
             
             <li><div data-rel="积累收集">积累收集<small>(4)</small></div>
-                
-            </li>
-            
-        
-    
-        
-            
-            <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
                 
             </li>
             
@@ -146,7 +146,7 @@
     
         
             
-            <li><div data-rel="go语言">go语言<small>(15)</small></div>
+            <li><div data-rel="go语言">go语言<small>(17)</small></div>
                 
             </li>
             
@@ -154,15 +154,7 @@
     
         
             
-            <li><div data-rel="Redis">Redis<small>(2)</small></div>
-                
-            </li>
-            
-        
-    
-        
-            
-            <li><div data-rel="技术文章阅读">技术文章阅读<small>(11)</small></div>
+            <li><div data-rel="Redis">Redis<small>(3)</small></div>
                 
             </li>
             
@@ -171,6 +163,14 @@
         
             
             <li><div data-rel="TCP/IP系列">TCP/IP系列<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="技术文章阅读">技术文章阅读<small>(11)</small></div>
                 
             </li>
             
@@ -208,8 +208,8 @@
     </div>
     <div><a class="about  site_url"  href="/about">关于</a></div>
 </div>
-<input type="hidden" id="yelog_site_posts_number" value="48">
-<input type="hidden" id="yelog_site_word_count" value="79.6k">
+<input type="hidden" id="yelog_site_posts_number" value="51">
+<input type="hidden" id="yelog_site_word_count" value="80.8k">
 <div style="display: none">
     <span id="busuanzi_value_site_uv"></span>
     <span id="busuanzi_value_site_pv"></span>
@@ -249,6 +249,14 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">单链表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">环</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color3">bloom filter</a>
     </li>
     
@@ -269,15 +277,15 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">单链表</a>
+        <a href="javascript:" class="color2">查找第k大数</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">环</a>
+        <a href="javascript:" class="color3">go</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">非递归遍历</a>
+        <a href="javascript:" class="color3">channel</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -289,19 +297,11 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">非递归遍历</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color5">旋转数组</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">查找第k大数</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">go</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">三个点</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -313,15 +313,11 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">channel</a>
-    </li>
-    
-    <li class="article-tag-list-item">
         <a href="javascript:" class="color5">sync.Once</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">nil</a>
+        <a href="javascript:" class="color4">三个点</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -329,15 +325,23 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">error</a>
-    </li>
-    
-    <li class="article-tag-list-item">
         <a href="javascript:" class="color4">接收者</a>
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">nil</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color2">select</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">常用命令</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">redis</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -349,15 +353,7 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">redis</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">常用命令</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">负载均衡</a>
+        <a href="javascript:" class="color4">pipeline</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -373,11 +369,15 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">error</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">缓存经典问题</a>
+        <a href="javascript:" class="color5">负载均衡</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -389,19 +389,11 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">RPC</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">多机房</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">多活</a>
-    </li>
-    
-    <li class="article-tag-list-item">
         <a href="javascript:" class="color4">线程数</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">RPC</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -417,11 +409,23 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">长连接</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">多机房</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多活</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color4">高可用</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">长连接</a>
+        <a href="javascript:" class="color2">缓存经典问题</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -437,10 +441,6 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">CPU profile</a>
-    </li>
-    
-    <li class="article-tag-list-item">
         <a href="javascript:" class="color4">sar</a>
     </li>
     
@@ -453,6 +453,10 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">CPU profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color5">perf</a>
     </li>
     
@@ -462,22 +466,6 @@
     
     <nav id="title-list-nav">
         
-        <a  class="性能分析 "
-           href="/2019/10/10/CPU-branch-prediction/"
-           data-tag="cpu,分支预测"
-           data-author="" >
-            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
-            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
-        </a>
-        
-        <a  class="积累收集 "
-           href="/2019/10/29/comm-article/"
-           data-tag=""
-           data-author="" >
-            <span class="post-title" title="精品文章">精品文章</span>
-            <span class="post-date" title="2019-10-29 23:00:17">2019/10/29</span>
-        </a>
-        
         <a  class="C/C++ "
            href="/2020/01/03/cpp-basic/"
            data-tag=""
@@ -486,20 +474,12 @@
             <span class="post-date" title="2020-01-03 19:07:13">2020/01/03</span>
         </a>
         
-        <a  class="积累收集 "
-           href="/2019/10/10/comm-url/"
-           data-tag=""
+        <a  class="性能分析 "
+           href="/2019/10/10/CPU-branch-prediction/"
+           data-tag="cpu,分支预测"
            data-author="" >
-            <span class="post-title" title="常用链接">常用链接</span>
-            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
-        </a>
-        
-        <a  class="积累收集 "
-           href="/2019/10/17/comm-tool/"
-           data-tag=""
-           data-author="" >
-            <span class="post-title" title="常用工具">常用工具</span>
-            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
         </a>
         
         <a  class="积累收集 "
@@ -516,6 +496,38 @@
            data-author="" >
             <span class="post-title" title="常用命令">常用命令</span>
             <span class="post-date" title="2019-11-26 16:13:27">2019/11/26</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/17/comm-tool/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用工具">常用工具</span>
+            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/10/comm-url/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用链接">常用链接</span>
+            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/15/ds_link_list_circle/"
+           data-tag="单链表,环"
+           data-author="" >
+            <span class="post-title" title="判断单链表是否有环">判断单链表是否有环</span>
+            <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/29/comm-article/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="精品文章">精品文章</span>
+            <span class="post-date" title="2019-10-29 23:00:17">2019/10/29</span>
         </a>
         
         <a  class="数据结构与算法 "
@@ -543,19 +555,19 @@
         </a>
         
         <a  class="数据结构与算法 "
-           href="/2020/01/15/ds_link_list_circle/"
-           data-tag="单链表,环"
+           href="/2020/01/20/ds_select_Kth/"
+           data-tag="查找第k大数"
            data-author="" >
-            <span class="post-title" title="判断单链表是否有环">判断单链表是否有环</span>
-            <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
+            <span class="post-title" title="select问题">select问题</span>
+            <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
         </a>
         
-        <a  class="数据结构与算法 "
-           href="/2020/01/29/ds_traverse_tree/"
-           data-tag="非递归遍历"
+        <a  class="go语言 "
+           href="/2019/12/07/go10_channel/"
+           data-tag="go,channel"
            data-author="" >
-            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
-            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
+            <span class="post-title" title="go语言之channel">go语言之channel</span>
+            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
         </a>
         
         <a  class="数据结构与算法 "
@@ -567,35 +579,27 @@
         </a>
         
         <a  class="数据结构与算法 "
+           href="/2020/01/29/ds_traverse_tree/"
+           data-tag="非递归遍历"
+           data-author="" >
+            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
+            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/16/go1/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go环境搭建">go环境搭建</span>
+            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
            href="/2019/12/25/ds_rotated_array_search/"
            data-tag="查找,旋转数组"
            data-author="" >
             <span class="post-title" title="旋转数组查找">旋转数组查找</span>
             <span class="post-date" title="2019-12-25 16:11:03">2019/12/25</span>
-        </a>
-        
-        <a  class="数据结构与算法 "
-           href="/2020/01/20/ds_select_Kth/"
-           data-tag="查找第k大数"
-           data-author="" >
-            <span class="post-title" title="select问题">select问题</span>
-            <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2020/05/28/go0_module_package/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go基本概念">go基本概念</span>
-            <span class="post-date" title="2020-05-28 00:12:34">2020/05/28</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2020/03/27/go11_3dot/"
-           data-tag="go,三个点"
-           data-author="" >
-            <span class="post-title" title="go语言之三个点用法">go语言之三个点用法</span>
-            <span class="post-date" title="2020-03-27 15:42:15">2020/03/27</span>
         </a>
         
         <a  class="go语言 "
@@ -607,19 +611,35 @@
         </a>
         
         <a  class="go语言 "
-           href="/2019/09/16/go1/"
-           data-tag="go"
+           href="/2020/05/04/go13_sync.Once/"
+           data-tag="go,sync.Once"
            data-author="" >
-            <span class="post-title" title="go环境搭建">go环境搭建</span>
-            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+            <span class="post-title" title="go语言之sync.Once">go语言之sync.Once</span>
+            <span class="post-date" title="2020-05-04 19:52:54">2020/05/04</span>
         </a>
         
         <a  class="go语言 "
-           href="/2019/12/07/go10_channel/"
-           data-tag="go,channel"
+           href="/2020/06/19/go15_mod_cmd/"
+           data-tag="go"
            data-author="" >
-            <span class="post-title" title="go语言之channel">go语言之channel</span>
-            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
+            <span class="post-title" title="go mod基本命令">go mod基本命令</span>
+            <span class="post-date" title="2020-06-19 10:50:34">2020/06/19</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2020/07/01/go16_empty_struct_interface/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go empty struct和interface">go empty struct和interface</span>
+            <span class="post-date" title="2020-07-01 19:48:32">2020/07/01</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2020/05/28/go0_module_package/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go基本概念">go基本概念</span>
+            <span class="post-date" title="2020-05-28 00:12:34">2020/05/28</span>
         </a>
         
         <a  class="go语言 "
@@ -631,43 +651,11 @@
         </a>
         
         <a  class="go语言 "
-           href="/2020/05/04/go13_sync.Once/"
-           data-tag="go,sync.Once"
+           href="/2020/03/27/go11_3dot/"
+           data-tag="go,三个点"
            data-author="" >
-            <span class="post-title" title="go语言之sync.Once">go语言之sync.Once</span>
-            <span class="post-date" title="2020-05-04 19:52:54">2020/05/04</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2019/09/17/go2/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go常用命令">go常用命令</span>
-            <span class="post-date" title="2019-09-17 22:46:33">2019/09/17</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2019/09/25/go3/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
-            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2019/10/03/go4/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
-            <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2019/10/13/go5_nil/"
-           data-tag="go,nil"
-           data-author="" >
-            <span class="post-title" title="go之nil">go之nil</span>
-            <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
+            <span class="post-title" title="go语言之三个点用法">go语言之三个点用法</span>
+            <span class="post-date" title="2020-03-27 15:42:15">2020/03/27</span>
         </a>
         
         <a  class="go语言 "
@@ -679,11 +667,19 @@
         </a>
         
         <a  class="go语言 "
-           href="/2019/11/09/go7_error/"
-           data-tag="go,error"
+           href="/2019/10/03/go4/"
+           data-tag="go"
            data-author="" >
-            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
-            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
+            <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
+            <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/17/go2/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go常用命令">go常用命令</span>
+            <span class="post-date" title="2019-09-17 22:46:33">2019/09/17</span>
         </a>
         
         <a  class="go语言 "
@@ -695,6 +691,14 @@
         </a>
         
         <a  class="go语言 "
+           href="/2019/10/13/go5_nil/"
+           data-tag="go,nil"
+           data-author="" >
+            <span class="post-title" title="go之nil">go之nil</span>
+            <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
+        </a>
+        
+        <a  class="go语言 "
            href="/2019/12/05/go9_select/"
            data-tag="go,select"
            data-author="" >
@@ -702,28 +706,36 @@
             <span class="post-date" title="2019-12-05 16:45:42">2019/12/05</span>
         </a>
         
+        <a  class="go语言 "
+           href="/2019/09/25/go3/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
+            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/02/05/redis0_cmd/"
+           data-tag="常用命令,redis"
+           data-author="" >
+            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
+            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
+        </a>
+        
         <a  class="Redis "
            href="/2019/12/29/redis1_build_cluster/"
-           data-tag="docker compose,集群搭建,redis"
+           data-tag="redis,docker compose,集群搭建"
            data-author="" >
             <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
             <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
         </a>
         
         <a  class="Redis "
-           href="/2020/02/05/redis0_cmd/"
-           data-tag="redis,常用命令"
+           href="/2020/06/07/redis1_pipeline/"
+           data-tag="pipeline"
            data-author="" >
-            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
-            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
-        </a>
-        
-        <a  class="技术文章阅读 "
-           href="/2020/02/02/tech10_ha/"
-           data-tag="负载均衡"
-           data-author="" >
-            <span class="post-title" title="负载均衡知识总结">负载均衡知识总结</span>
-            <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
+            <span class="post-title" title="pipeline">pipeline</span>
+            <span class="post-date" title="2020-06-07 22:46:04">2020/06/07</span>
         </a>
         
         <a  class="TCP/IP系列 "
@@ -732,6 +744,14 @@
            data-author="" >
             <span class="post-title" title="TCP_NODELAY和延迟ACK">TCP_NODELAY和延迟ACK</span>
             <span class="post-date" title="2019-11-23 11:01:13">2019/11/23</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/11/09/go7_error/"
+           data-tag="go,error"
+           data-author="" >
+            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
+            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
         </a>
         
         <a  class="技术文章阅读 "
@@ -743,11 +763,11 @@
         </a>
         
         <a  class="技术文章阅读 "
-           href="/2020/02/05/tech11_cache1/"
-           data-tag="缓存经典问题"
+           href="/2020/02/02/tech10_ha/"
+           data-tag="负载均衡"
            data-author="" >
-            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
-            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+            <span class="post-title" title="负载均衡知识总结">负载均衡知识总结</span>
+            <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
         </a>
         
         <a  class="技术文章阅读 "
@@ -759,27 +779,19 @@
         </a>
         
         <a  class="技术文章阅读 "
-           href="/2020/01/25/tech4_rpc/"
-           data-tag="RPC"
-           data-author="" >
-            <span class="post-title" title="RPC client异步收发核心细节">RPC client异步收发核心细节</span>
-            <span class="post-date" title="2020-01-25 12:18:12">2020/01/25</span>
-        </a>
-        
-        <a  class="技术文章阅读 "
-           href="/2020/01/24/tech3_multi_room_living/"
-           data-tag="多机房,多活"
-           data-author="" >
-            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
-            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
-        </a>
-        
-        <a  class="技术文章阅读 "
            href="/2020/01/26/tech5_thread_num/"
            data-tag="线程数"
            data-author="" >
             <span class="post-title" title="线程数究竟设置多少合理？">线程数究竟设置多少合理？</span>
             <span class="post-date" title="2020-01-26 16:32:07">2020/01/26</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/25/tech4_rpc/"
+           data-tag="RPC"
+           data-author="" >
+            <span class="post-title" title="RPC client异步收发核心细节">RPC client异步收发核心细节</span>
+            <span class="post-date" title="2020-01-25 12:18:12">2020/01/25</span>
         </a>
         
         <a  class="技术文章阅读 "
@@ -791,6 +803,22 @@
         </a>
         
         <a  class="技术文章阅读 "
+           href="/2020/01/30/tech9_58pc/"
+           data-tag="长连接"
+           data-author="" >
+            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
+            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/24/tech3_multi_room_living/"
+           data-tag="多机房,多活"
+           data-author="" >
+            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
+            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
            href="/2020/01/27/tech6_lb_ha1/"
            data-tag="负载均衡,高可用"
            data-author="" >
@@ -799,19 +827,19 @@
         </a>
         
         <a  class="技术文章阅读 "
+           href="/2020/02/05/tech11_cache1/"
+           data-tag="缓存经典问题"
+           data-author="" >
+            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
+            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
            href="/2020/01/29/tech8_ha/"
            data-tag="高可用"
            data-author="" >
             <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
             <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
-        </a>
-        
-        <a  class="技术文章阅读 "
-           href="/2020/01/30/tech9_58pc/"
-           data-tag="长连接"
-           data-author="" >
-            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
-            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
         </a>
         
         <a  class="工具 性能 "
@@ -823,19 +851,19 @@
         </a>
         
         <a  class="工具 性能 "
-           href="/2019/09/10/tool2_gperftools/"
-           data-tag="gperftools,CPU profile"
-           data-author="" >
-            <span class="post-title" title="gperftools之CPU Profile">gperftools之CPU Profile</span>
-            <span class="post-date" title="2019-09-10 22:55:47">2019/09/10</span>
-        </a>
-        
-        <a  class="工具 性能 "
            href="/2019/10/30/tool4_sar/"
            data-tag="内存,sar,CPU,IO"
            data-author="" >
             <span class="post-title" title="sar查看内存、CPU、IO">sar查看内存、CPU、IO</span>
             <span class="post-date" title="2019-10-30 08:02:03">2019/10/30</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/10/tool2_gperftools/"
+           data-tag="gperftools,CPU profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之CPU Profile">gperftools之CPU Profile</span>
+            <span class="post-date" title="2019-09-10 22:55:47">2019/09/10</span>
         </a>
         
         <a  class="工具 性能 "
@@ -884,7 +912,7 @@
     </div>
     <div class="article-meta">
         
-        创建时间:<time class="date" title='更新时间: 2019-10-29 22:53:07'>2019-10-10 23:40</time>
+        创建时间:<time class="date" title='更新时间: 2020-06-09 08:52:43'>2019-10-10 23:40</time>
         
     </div>
     <div class="article-meta">
@@ -934,7 +962,7 @@
 </div>
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="1-问题引入"><a href="#1-问题引入" class="headerlink" title="1 问题引入"></a>1 问题引入</h1><p>先看C++代码，用256的模数随机填充一个固定大小的大数组，然后对数组的一半元素求和：  </p>
+        <h1 id="1-问题引入"><a href="#1-问题引入" class="headerlink" title="1 问题引入"></a>1 问题引入</h1><p>先看C++代码，用256的模数随机填充一个固定大小的大数组，然后对数组的一半元素求和：</p>
 <pre><code>#include &lt;iostream&gt;
 #include &lt;ctime&gt;
 #include &lt;algorithm&gt;
@@ -964,43 +992,43 @@ int main(int argc, char** argv)
     std::cout &lt;&lt; &quot;elapsedTime:&quot; &lt;&lt; elapsedTime &lt;&lt; &quot;, CLOCKS_PER_SEC:&quot; &lt;&lt; CLOCKS_PER_SEC &lt;&lt; std::endl;
     std::cout &lt;&lt; &quot;sum=&quot; &lt;&lt; sum &lt;&lt; std::endl;
     return 0;
-}</code></pre><p>结果如下：  </p>
+}</code></pre><p>结果如下：</p>
 <pre><code>elapsedTime:11.15, CLOCKS_PER_SEC:1000000
-sum=314931600000</code></pre><p>现在注释掉std::sort函数，结果如下：  </p>
+sum=314931600000</code></pre><p>现在注释掉std::sort函数，结果如下：</p>
 <pre><code>elapsedTime:24.78, CLOCKS_PER_SEC:1000000
 sum=314931600000</code></pre><p>可以发现先排序后计算运行效率提高了2倍，计算完全不涉及数据的有序性，理论上数组是否有序不会对计算产生任何作用，为什么排序后的数组要比未排序数组运行快2倍？</p>
-<h1 id="2-分析"><a href="#2-分析" class="headerlink" title="2 分析"></a>2 分析</h1><p>处理器为了提高执行效率采用流水线架构，对于四级流水线，任何一条指令在CPU执行都必须经过如下步骤：  </p>
+<h1 id="2-分析"><a href="#2-分析" class="headerlink" title="2 分析"></a>2 分析</h1><p>处理器为了提高执行效率采用流水线架构，对于四级流水线，任何一条指令在CPU执行都必须经过如下步骤：</p>
 <ul>
 <li>取指(Fetch)：从内存读取指令字节，地址为程序计数器(PC)的值</li>
 <li>译码(Decode)：对取回的指令的拆分和解释，识别和区分出不同的指令类别及各种获取操作数的方法</li>
 <li>执行(Execute)：执行指令，如果是跳转指令，会检查条件码和分支条件，选择分支</li>
 <li>写回(Write Back)：将指令结果保存到内存</li>
 </ul>
-<p>第一条指令进入执行阶段时，第二条指令已经开始译码，第三条指令处于取指阶段，...，相对于第一条指令执行写回内存再开始第二条指令的取指，效率大幅度提高。现代处理器一般流水线深度高达10-31级，对程序执行速度提高显著。但是遇到跳转指令时执行效率会急剧下降，对于分支跳转指令，我们在执行完改指令前是不知道是否发生跳转，即无法确定分支指令的下一条指令的地址，所以无法将分支指令的下一条指令放入流水线，只能等待分支指令执行完成才能开始下一条命令的取指步骤，导致流水线出现气泡(Bubble)，大大降低流水线的处理能力。  </p>
-<p>为解决上述问题，分支预测器(Branch predictor)应运而生，当指令执行到分支跳转指令时，CPU不再是空等待分支跳转指令执行完毕给出下一条指令的地址，而是根据模型预测分支是否发生跳转以及跳转到哪里，CPU将预测到的指令放入流水线，去执行指令的取指、译码等工作。当分支跳转指令执行完成后，会给出真正是否需要跳转的结果，CPU即可判断分支跳转预测是否正确，如果预测正确，则流水线继续执行，如果预测错误，则需要清空流水线，将前面不该进入流水线的指令清空，然后回退到分支地方，将正确的分支路径放入流水线重新执行。大多数应用都具有状态良好的(well-behaved)分支，所以现代化的分支预测器一般具有超过90%的命中率，但是面对无法预测的分支，且没有识别出可应用的模式时，分支预测器就无用武之地了。处理器如何预测？答案是分析历史运行记录，常见的分支预测器有静态分支预测器，动态分支预测器。  </p>
-<p>上述代码导致非排序数组性能差别的关键在于if语句：  </p>
+<p>第一条指令进入执行阶段时，第二条指令已经开始译码，第三条指令处于取指阶段，...，相对于第一条指令执行写回内存再开始第二条指令的取指，效率大幅度提高。现代处理器一般流水线深度高达10-31级，对程序执行速度提高显著。但是遇到跳转指令时执行效率会急剧下降，对于分支跳转指令，我们在执行完该指令前是不知道是否发生跳转，即无法确定分支指令的下一条指令的地址，所以无法将分支指令的下一条指令放入流水线，只能等待分支指令执行完成才能开始下一条命令的取指步骤，导致流水线出现气泡(Bubble)，大大降低流水线的处理能力。</p>
+<p>为解决上述问题，分支预测器(Branch predictor)应运而生，当指令执行到分支跳转指令时，CPU不再是空等待分支跳转指令执行完毕给出下一条指令的地址，而是根据模型预测分支是否发生跳转以及跳转到哪里，CPU将预测到的指令放入流水线，去执行指令的取指、译码等工作。当分支跳转指令执行完成后，会给出真正是否需要跳转的结果，CPU即可判断分支跳转预测是否正确，如果预测正确，则流水线继续执行，如果预测错误，则需要清空流水线，将前面不该进入流水线的指令清空，然后回退到分支地方，将正确的分支路径放入流水线重新执行。大多数应用都具有状态良好的(well-behaved)分支，所以现代化的分支预测器一般具有超过90%的命中率，但是面对无法预测的分支，且没有识别出可应用的模式时，分支预测器就无用武之地了。处理器如何预测？答案是分析历史运行记录，常见的分支预测器有静态分支预测器，动态分支预测器。</p>
+<p>上述代码导致非排序数组性能差别的关键在于if语句：</p>
 <pre><code>if(data[c] &gt;= 128)
-    sum += data[c];</code></pre><p>data数组里面的值是按0~255均匀存储的，data有序时，前面一半元素的迭代将不会进入if-statement，超过一半时，元素迭代将全部进入if-statement。这种规律对于分支预测非常友好，因为发现总是选择某个方向多次，于是就很容易做出判断，除了改变方向之后的一两次预测失败。  </p>
-<p>有序数组的分支预测流程：  </p>
+    sum += data[c];</code></pre><p>data数组里面的值是按0~255均匀存储的，data有序时，前面一半元素的迭代将不会进入if-statement，超过一半时，元素迭代将全部进入if-statement。这种规律对于分支预测非常友好，因为发现总是选择某个方向多次，于是就很容易做出判断，除了改变方向之后的一两次预测失败。</p>
+<p>有序数组的分支预测流程：</p>
 <pre><code>T = 分支命中
 N = 分支没有命中
 data[] = 0, 1, 2, 3, 4, ... 126, 127, 128, 129, 130, ... 250, 251, 252, ...
 branch = N  N  N  N  N  ...   N    N    T    T    T  ...   T    T    T  ...
-       = NNNNNNNNNNNN ... NNNNNNNTTTTTTTTT ... TTTTTTTTTT  (非常容易预测)</code></pre><p>无序数组的分支预测流程：  </p>
+       = NNNNNNNNNNNN ... NNNNNNNTTTTTTTTT ... TTTTTTTTTT  (非常容易预测)</code></pre><p>无序数组的分支预测流程：</p>
 <pre><code>data[] = 226, 185, 125, 158, 198, 144, 217, 79, 202, 118,  14, 150, 177, 182, 133, ...
 branch =   T,   T,   N,   T,   T,   T,   T,  N,   T,   N,   N,   T,   T,   T,   N, ...
 
-       = TTNTTTTNTNNTTTN ...   (完全随机--无法预测)</code></pre><p>本例中，由于data数组元素填充的特殊性，决定了分支预测器在未排序数组迭代过程中将有50%的错误命中率，因而执行完整个sum操作将会耗时更多。  </p>
-<h1 id="3-优化"><a href="#3-优化" class="headerlink" title="3 优化"></a>3 优化</h1><p>利用位运算取消分支跳转，基本知识：  </p>
+       = TTNTTTTNTNNTTTN ...   (完全随机--无法预测)</code></pre><p>本例中，由于data数组元素填充的特殊性，决定了分支预测器在未排序数组迭代过程中将有50%的错误命中率，因而执行完整个sum操作将会耗时更多。</p>
+<h1 id="3-优化"><a href="#3-优化" class="headerlink" title="3 优化"></a>3 优化</h1><p>利用位运算取消分支跳转，基本知识：</p>
 <pre><code>|x| &gt;&gt; 31 = 0 #非负数右移31位一定为0
 ~(|x| &gt;&gt; 31) = -1 #0取反为-1
 -|x| &gt;&gt; 31 = -1 #负数右移31位一定为0xffffffff = -1
 ~(-|x| &gt;&gt; 31) = 0 #-1取反为0
 -1 = 0xffffffff
--1 &amp; x = x #以-1为mask和任何数求与，值不变</code></pre><p>故分支判断可优化为：  </p>
+-1 &amp; x = x #以-1为mask和任何数求与，值不变</code></pre><p>故分支判断可优化为：</p>
 <pre><code>int t = (data[c] - 128) &gt;&gt; 31;
-sum += (~t &amp; data[c]);</code></pre><p>当data[c] &lt; 128，t为-1，<del>t为0；<br>当data[c] &gt;= 128，t为0，</del>t为-1；  </p>
-<p>若想避免移位操作，可以使用如下方式：  </p>
+sum += (~t &amp; data[c]);</code></pre><p>当data[c] &lt; 128，t为-1，<del>t为0；<br>当data[c] &gt;= 128，t为0，</del>t为-1；</p>
+<p>若想避免移位操作，可以使用如下方式：</p>
 <pre><code>int t = -(data[c] &gt;= 128);
 sum += t &amp; data[c];</code></pre>
       
@@ -1019,7 +1047,7 @@ sum += t &amp; data[c];</code></pre>
     <p><span class="copy-title">文章字数:</span><span class="post-count">1.4k</span></p>
     <p><span class="copy-title">本文作者:</span><a href="javascript:void(0)" title="melonshell">melonshell</a></p>
     <p><span class="copy-title">发布时间:</span>2019-10-10, 23:40:47</p>
-    <p><span class="copy-title">最后更新:</span>2019-10-29, 22:53:07</p>
+    <p><span class="copy-title">最后更新:</span>2020-06-09, 08:52:43</p>
     <span class="copy-title">原始链接:</span><a class="post-url" href="/2019/10/10/CPU-branch-prediction/" title="CPU分支预测">http://melonshell.github.io/2019/10/10/CPU-branch-prediction/</a>
     <p>
         <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
@@ -1142,7 +1170,7 @@ sum += t &amp; data[c];</code></pre>
     /*作者、标签的自动补全*/
     $(function () {
         $('.search').AutoComplete({
-            'data': ['#cpu','#分支预测','#bloom filter','#lower_bound','#upper_bound','#查找','#缓存淘汰算法','#单链表','#环','#非递归遍历','#堆','#堆排序','#旋转数组','#查找第k大数','#go','#三个点','#C语言','#多态','#channel','#sync.Once','#nil','#gdb','#error','#接收者','#select','#docker compose','#集群搭建','#redis','#常用命令','#负载均衡','#TCP/IP','#TCP_NODELAY','#延迟ACK','#读写分离、垂直拆分、水平拆分、分库分表','#缓存经典问题','#微信','#红包','#RPC','#多机房','#多活','#线程数','#单点','#可用性','#性能','#高可用','#长连接','#gperftools','#内存','#heap profile','#CPU profile','#sar','#CPU','#IO','#perf',],
+            'data': ['#cpu','#分支预测','#单链表','#环','#bloom filter','#lower_bound','#upper_bound','#查找','#缓存淘汰算法','#查找第k大数','#go','#channel','#堆','#堆排序','#非递归遍历','#旋转数组','#C语言','#多态','#sync.Once','#三个点','#gdb','#接收者','#nil','#select','#常用命令','#redis','#docker compose','#集群搭建','#pipeline','#TCP/IP','#TCP_NODELAY','#延迟ACK','#error','#读写分离、垂直拆分、水平拆分、分库分表','#负载均衡','#微信','#红包','#线程数','#RPC','#单点','#可用性','#性能','#长连接','#多机房','#多活','#高可用','#缓存经典问题','#gperftools','#内存','#heap profile','#sar','#CPU','#IO','#CPU profile','#perf',],
             'itemHeight': 20,
             'width': 418
         }).AutoComplete('show');

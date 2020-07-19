@@ -2,9 +2,44 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://melonshell.github.io/2020/06/19/go15_mod_cmd/</loc>
+    
+    <lastmod>2020-07-08T08:02:37.072Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/07/01/go16_empty_struct_interface/</loc>
+    
+    <lastmod>2020-07-01T12:13:42.551Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2019/12/07/go10_channel/</loc>
+    
+    <lastmod>2020-07-01T12:08:18.131Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2019/10/10/CPU-branch-prediction/</loc>
+    
+    <lastmod>2020-06-09T00:52:43.200Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/06/07/redis1_pipeline/</loc>
+    
+    <lastmod>2020-06-07T16:12:49.979Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://melonshell.github.io/2020/06/06/go14_schedule/</loc>
     
-    <lastmod>2020-06-06T14:59:22.131Z</lastmod>
+    <lastmod>2020-06-06T15:50:30.877Z</lastmod>
     
   </url>
   
@@ -19,13 +54,6 @@
     <loc>http://melonshell.github.io/2020/05/04/go13_sync.Once/</loc>
     
     <lastmod>2020-05-04T14:25:37.123Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://melonshell.github.io/2019/12/07/go10_channel/</loc>
-    
-    <lastmod>2020-05-04T03:51:51.264Z</lastmod>
     
   </url>
   
@@ -285,13 +313,6 @@
     <loc>http://melonshell.github.io/2019/10/29/comm-article/</loc>
     
     <lastmod>2019-10-29T15:04:00.922Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://melonshell.github.io/2019/10/10/CPU-branch-prediction/</loc>
-    
-    <lastmod>2019-10-29T14:53:07.435Z</lastmod>
     
   </url>
   
