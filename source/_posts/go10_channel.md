@@ -44,6 +44,8 @@ close   |  panic      |  panic         | 成功close
 写ch <- | 一直阻塞     |  panic         | 阻塞或成功写入数据
 读<- ch | 一直阻塞     | 读取对应类型零值 |阻塞或成功读取数据
 
+关闭channel会产生一个广播机制，所有从channel读取消息的goroutine都会收到消息
+
 # 4 channel特性
 1) 线程安全；
 2) 可以作为一个FIFO队列，接收和发送的数据顺序一致；
