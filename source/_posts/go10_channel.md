@@ -45,6 +45,7 @@ close   |  panic      |  panic         | 成功close
 读<- ch | 一直阻塞     | 读取对应类型零值 |阻塞或成功读取数据
 
 关闭channel会产生一个广播机制，所有从channel读取消息的goroutine都会收到消息
+For a channel c, the built-in function close(c) records that no more values will be sent on the channel. It is an error if c is a receive-only channel. Sending to or closing a closed channel causes a run-time panic. Closing the nil channel also causes a run-time panic. After calling close, and after any previously sent values have been received, receive operations will return the zero value for the channel's type without blocking. The multi-valued receive operation returns a received value along with an indication of whether the channel is closed.
 
 # 4 channel特性
 1) 线程安全；
