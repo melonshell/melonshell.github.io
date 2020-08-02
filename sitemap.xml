@@ -2,6 +2,27 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://melonshell.github.io/2019/12/07/go10_channel/</loc>
+    
+    <lastmod>2020-07-26T05:45:52.595Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/07/19/security/</loc>
+    
+    <lastmod>2020-07-19T15:25:52.320Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/07/19/security_hmac/</loc>
+    
+    <lastmod>2020-07-19T14:43:00.488Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://melonshell.github.io/2020/06/19/go15_mod_cmd/</loc>
     
     <lastmod>2020-07-08T08:02:37.072Z</lastmod>
@@ -12,13 +33,6 @@
     <loc>http://melonshell.github.io/2020/07/01/go16_empty_struct_interface/</loc>
     
     <lastmod>2020-07-01T12:13:42.551Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://melonshell.github.io/2019/12/07/go10_channel/</loc>
-    
-    <lastmod>2020-07-01T12:08:18.131Z</lastmod>
     
   </url>
   
