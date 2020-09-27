@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://melonshell.github.io/2020/06/19/go15_mod_cmd/</loc>
+    
+    <lastmod>2020-09-27T16:49:43.240Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/09/27/git/</loc>
+    
+    <lastmod>2020-09-27T07:16:32.251Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://melonshell.github.io/2019/11/23/tcp_nodelay_delayed_ack/</loc>
     
     <lastmod>2020-08-02T12:54:32.638Z</lastmod>
@@ -26,13 +40,6 @@
     <loc>http://melonshell.github.io/2020/07/19/security_hmac/</loc>
     
     <lastmod>2020-07-19T14:43:00.488Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://melonshell.github.io/2020/06/19/go15_mod_cmd/</loc>
-    
-    <lastmod>2020-07-08T08:02:37.072Z</lastmod>
     
   </url>
   

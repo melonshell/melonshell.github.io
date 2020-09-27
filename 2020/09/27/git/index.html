@@ -2,9 +2,9 @@
 <html>
 <head><meta name="generator" content="Hexo 3.9.0">
   <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
-  <title>非递归遍历二叉树 | Hexo</title>
-  <meta name="keywords" content=" 非递归遍历 ">
-  <meta name="description" content="非递归遍历二叉树 | Hexo">
+  <title>常用工具 | Hexo</title>
+  <meta name="keywords" content>
+  <meta name="description" content="常用工具 | Hexo">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="description" content="1 切换到taggit checkout tag_namegit会提示当前处于&amp;quot;detached HEAD&amp;quot;状态，因为tag相当于一个快照，不能更改其代码">
 <meta property="og:type" content="article">
@@ -945,9 +945,9 @@
 </aside>
 <div class="post">
     <div class="pjax">
-        <article id="post-ds_traverse_tree" class="article article-type-post" itemscope itemprop="blogPost">
+        <article id="post-git" class="article article-type-post" itemscope itemprop="blogPost">
     
-        <h1 class="article-title">非递归遍历二叉树</h1>
+        <h1 class="article-title">常用工具</h1>
     
     <div class="article-meta">
         
@@ -955,26 +955,20 @@
         
         <span class="book">
             
-                <a href="javascript:" data-rel="数据结构与算法">数据结构与算法</a>
+                <a href="javascript:" data-rel="git常用命令">git常用命令</a>
             
         </span>
         
         
-        <span class="tag">
-            
-            <a href="javascript:" class="color1">非递归遍历</a>
-            
-        </span>
+    </div>
+    <div class="article-meta">
+        
+        创建时间:<time class="date" title='更新时间: 2020-09-27 15:16:32'>2020-09-27 15:06</time>
         
     </div>
     <div class="article-meta">
         
-        创建时间:<time class="date" title='更新时间: 2020-01-30 01:18:15'>2020-01-29 16:37</time>
-        
-    </div>
-    <div class="article-meta">
-        
-        <span>字数:510</span>
+        <span>字数:37</span>
         
         
         <span id="busuanzi_container_page_pv">
@@ -1004,7 +998,7 @@
     
     <div class="toc-ref">
     
-        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-先序遍历"><span class="toc-text">1 先序遍历</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-中序遍历"><span class="toc-text">2 中序遍历</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-后序遍历"><span class="toc-text">3 后序遍历</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-层次遍历"><span class="toc-text">4 层次遍历</span></a></li></ol>
+        
     
 <style>
     .left-col .switch-btn,
@@ -1019,102 +1013,7 @@
 </div>
     <div class="article-entry" itemprop="articleBody">
       
-        <p>定义树节点结构体：<br>struct Node<br>{<br>    Node* left;<br>    Node* right;<br>    int   val;<br>}</p>
-<p>void visit(Node* n)<br>{<br>    if(!n) return;<br>    cout &lt;&lt; n-&gt;val &lt;&lt; endl;<br>}</p>
-<h1 id="1-先序遍历"><a href="#1-先序遍历" class="headerlink" title="1 先序遍历"></a>1 先序遍历</h1><p>用栈模拟递归调用；<br>首先根节点入栈；<br>栈顶元素出栈；<br>栈顶右孩子入栈；<br>栈顶左孩子入栈；</p>
-<pre><code class="cpp">void preOrder(Node* r)
-{
-    if(r == NULL) return;
-    stack&lt;Node*&gt; s;
-    s.push(r);
-
-    while(!s.empty())
-    {
-        Node* t = s.top();
-        s.pop();
-        visit(t);
-        if(t-&gt;right) s.push(t-&gt;right);
-        if(t-&gt;left) s.push(t-&gt;left);
-    }
-}</code></pre>
-<h1 id="2-中序遍历"><a href="#2-中序遍历" class="headerlink" title="2 中序遍历"></a>2 中序遍历</h1><p>根结点入栈，如果有左孩子，则左孩子入栈，一直到左孩子为空；<br>栈顶元素出栈；<br>如果栈顶元素有右孩子，右孩子入栈，如果右孩子有左孩子，依次入栈，直到左孩子为空；</p>
-<pre><code class="cpp">void inOrder(Node* r)
-{
-    stack&lt;Node*&gt; s;
-    while(r) { s.push(r); r = r-&gt;left; }
-
-    while(!s.empty())
-    {
-        Node* t = s.top();
-        s.pop();
-        visit(t);
-
-        if(t-&gt;right)
-        {
-            Node* r = t-&gt;right;
-            while(r) { s.push(r); r = r-&gt;left; }
-        }
-    }
-}</code></pre>
-<h1 id="3-后序遍历"><a href="#3-后序遍历" class="headerlink" title="3 后序遍历"></a>3 后序遍历</h1><p><strong>思路1：双栈</strong><br>后序遍历为：左孩子--&gt;右孩子--&gt;根<br>先序遍历为：根--&gt;左孩子--&gt;右孩子<br>逆先序遍历为：根--&gt;右孩子--&gt;左孩子<br>可以发现逆先序遍历和后序遍历正好相反</p>
-<pre><code class="cpp">void postOrder(Node* r)
-{
-    stack&lt;Node*&gt; s;
-    stack&lt;Node*&gt; rs;
-    if(r) s.push(r);
-    while(!s.empty())
-    {
-        Node* t = s.top();
-        s.pop();
-        rs.push(t);
-        if(t-&gt;left) s.push(t-&gt;left);
-        if(t-&gt;right) s.push(t-&gt;right)；
-    }
-
-    while(!rs.empty()) rs.pop();
-}
-</code></pre>
-<p><strong>思路2：用一个栈，记录上次遍历的节点</strong><br>类似于中序遍历，记录上次遍历的节点</p>
-<pre><code class="cpp">void postOrder(Node* r)
-{
-    if(!r) return;
-
-    stack&lt;Node*&gt; s;
-    Node* last = NULL;
-    s.push(r);
-    while(!s.empty())
-    {
-        Node* t = s.top();
-        if(t-&gt;left != last &amp;&amp; t-&gt;right != last &amp;&amp; t-&gt;left)
-        {
-            s.push(t-&gt;left);
-        }
-        else if(t-&gt;right != last &amp;&amp; t-&gt;right)
-        {
-            s.push(t-&gt;right);
-        }
-        else
-        {
-            s.pop();
-            visit(t);
-            last = t;
-        }
-    }
-}</code></pre>
-<h1 id="4-层次遍历"><a href="#4-层次遍历" class="headerlink" title="4 层次遍历"></a>4 层次遍历</h1><pre><code class="cpp">void breadthTraverse(Node* r)
-{
-    if(!r) return;
-    queue&lt;Node*&gt; q;
-    q.push_back(r);
-    while(!q.empty())
-    {
-        Node* t = q.front();
-        visit(t);
-        q.pop_front();
-        if(t-&gt;left) q.push_back(t-&gt;left);
-        if(t-&gt;right) q.push_back(t-&gt;right);
-    }
-}</code></pre>
+        <p>1 切换到tag<br>git checkout tag_name<br>git会提示当前处于&quot;detached HEAD&quot;状态，因为tag相当于一个快照，不能更改其代码</p>
 
       
        <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至yj.mapple@gmail.com </span>
@@ -1128,12 +1027,12 @@
 
 
 <div class="article_copyright">
-    <p><span class="copy-title">文章标题:</span>非递归遍历二叉树</p>
-    <p><span class="copy-title">文章字数:</span><span class="post-count">510</span></p>
+    <p><span class="copy-title">文章标题:</span>常用工具</p>
+    <p><span class="copy-title">文章字数:</span><span class="post-count">37</span></p>
     <p><span class="copy-title">本文作者:</span><a href="javascript:void(0)" title="melonshell">melonshell</a></p>
-    <p><span class="copy-title">发布时间:</span>2020-01-29, 16:37:23</p>
-    <p><span class="copy-title">最后更新:</span>2020-01-30, 01:18:15</p>
-    <span class="copy-title">原始链接:</span><a class="post-url" href="/2020/01/29/ds_traverse_tree/" title="非递归遍历二叉树">http://melonshell.github.io/2020/01/29/ds_traverse_tree/</a>
+    <p><span class="copy-title">发布时间:</span>2020-09-27, 15:06:23</p>
+    <p><span class="copy-title">最后更新:</span>2020-09-27, 15:16:32</p>
+    <span class="copy-title">原始链接:</span><a class="post-url" href="/2020/09/27/git/" title="常用工具">http://melonshell.github.io/2020/09/27/git/</a>
     <p>
         <span class="copy-title">版权声明:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target = "_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
     </p>
