@@ -1,8 +1,8 @@
 ---
-title: 常用工具
+title: git常用命令
 date: 2020-09-27 15:06:23
 categories:
-- git常用命令
+- 积累收集
 ---
 
 1 切换到tag
