@@ -13,7 +13,8 @@ struct{}类型的占用内存大小为0：
 unsafe.Sizeof(struct{}{})
 //输出结果：0
 ```
-
+* 空结构体不占用空间(The empty struct consumes no storage)
+* 空结构体的切片只占用切片头的空间(Slices of struct{}s consume only the space for their slice header)
 * 用于控制而非数据信息：chan struct{}
 * 实现C++的set：map[string]struct{}
 
