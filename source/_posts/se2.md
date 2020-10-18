@@ -8,7 +8,7 @@ categories:
 # 1 代码阅读
 * Redis
 * LevelDB
-* MariaDB
+* MariaDB（隔离级别及原理）
 * Etcd
 * istio
 * Nginx
@@ -33,6 +33,8 @@ http://www.voidcn.com/article/p-qfehnupi-bmg.html
 
 3） 架构文摘
 https://blog.csdn.net/uxiAD7442KMy1X86DtM3/article/list/1
+
+小闪对话
 
 # 4 基础知识
 1） Linux基础知识
