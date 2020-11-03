@@ -2,16 +2,79 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>http://melonshell.github.io/2020/06/19/go15_mod_cmd/</loc>
+    <loc>http://melonshell.github.io/2020/11/01/problem0/</loc>
     
-    <lastmod>2020-09-27T16:49:43.240Z</lastmod>
+    <lastmod>2020-11-01T03:12:00.235Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/10/18/se0/</loc>
+    
+    <lastmod>2020-10-19T03:27:19.454Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/10/18/se3/</loc>
+    
+    <lastmod>2020-10-19T03:27:19.454Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/10/18/se2/</loc>
+    
+    <lastmod>2020-10-19T03:27:19.454Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/10/18/se1/</loc>
+    
+    <lastmod>2020-10-19T03:27:19.454Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/01/30/tech9_58pc/</loc>
+    
+    <lastmod>2020-10-19T03:27:19.454Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/10/13/go18_test_and_inline/</loc>
+    
+    <lastmod>2020-10-13T12:37:49.019Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/10/04/go17_var_alloc/</loc>
+    
+    <lastmod>2020-10-04T05:36:45.911Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/07/01/go16_empty_struct_interface/</loc>
+    
+    <lastmod>2020-10-04T05:36:45.910Z</lastmod>
     
   </url>
   
   <url>
     <loc>http://melonshell.github.io/2020/09/27/git/</loc>
     
-    <lastmod>2020-09-27T07:16:32.251Z</lastmod>
+    <lastmod>2020-09-27T16:59:24.000Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://melonshell.github.io/2020/06/19/go15_mod_cmd/</loc>
+    
+    <lastmod>2020-09-27T16:49:43.240Z</lastmod>
     
   </url>
   
@@ -40,13 +103,6 @@
     <loc>http://melonshell.github.io/2020/07/19/security_hmac/</loc>
     
     <lastmod>2020-07-19T14:43:00.488Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://melonshell.github.io/2020/07/01/go16_empty_struct_interface/</loc>
-    
-    <lastmod>2020-07-01T12:13:42.551Z</lastmod>
     
   </url>
   
@@ -138,13 +194,6 @@
     <loc>http://melonshell.github.io/2020/01/31/ds_bloomfilter/</loc>
     
     <lastmod>2020-02-01T06:28:43.485Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://melonshell.github.io/2020/01/30/tech9_58pc/</loc>
-    
-    <lastmod>2020-01-30T07:34:14.024Z</lastmod>
     
   </url>
   
