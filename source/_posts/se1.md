@@ -56,3 +56,7 @@ Cache-As-SoR
 # 18 集群
 MariaDB集群，Redis集群
 # 19 分布式
+# 20 高可用
+冗余 + 自动故障转移
+https://zhuanlan.zhihu.com/p/43723276
+
