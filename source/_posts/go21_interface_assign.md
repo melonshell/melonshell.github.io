@@ -85,6 +85,19 @@ eface结构体如下：
 ```
 首先定义接口Person，然后定义struct Man实现该接口，PrintData用于打印Person接口对应的iface的data成员。unsafe.Pointer(p)指向iface/eface第一个指针成员，由于结构体内存连续，指针大小可通过unsafe.Sizeof(p)计算，因此data成员的地址为uintptr(unsafe.Pointer(p)) + uintptr(unsafe.Sizeof(p))，再类型转换为**Man即可。
 
+或者采用如下方式：
+```go
+    type ifaceWords struct {
+        typ unsafe.Pointer
+        data unsafe.Pointer
+    }
+
+    func PrintData(p *Person) {
+        d := (*Man)(((*ifaceWords)(unsafe.Pointer(p))).data)
+        fmt.Printf("iface &data:%p, data:%p, *data:%+v\n", &d, d, *d)
+    }
+```
+
 # 3 对象值赋值给接口变量
 ```go
    var person Person
@@ -99,7 +112,7 @@ man addr:0xc00009c040
 iface &data:0xc0000841e8, data:0xc00009c060, *data:{Name:Jeff Age:33}
 可以发现man addr和data并不相同，接口Copy了一份man。
    ![接口赋值](/pic/go_interface_value.png)
-   
+
 # 4 对象指针赋值给接口变量
 ```go
    var person Person
@@ -134,6 +147,13 @@ iface &data:0xc00010a058, data:0xc00010c020, *data:{Name:Jeff Age:33}
 可以发现person拷贝了一份man，但是person和person1的data相同。
 可以发现man addr和data值相同，指向同一个对象。
    ![接口赋值](/pic/go_value_interface_assign.png)
+
+正如所期望的一样，person和person1的iface的tab指针也相同：
+d  := ((*ifaceWords)(unsafe.Pointer(&person))).typ
+d1 := ((*ifaceWords)(unsafe.Pointer(&person1))).typ
+fmt.Printf("d:%p d1:%p", d, d1)
+结果如下：
+d:0x4de560 d1:0x4de560
 
 ## 5.2 接口变量保存指针
 ```go

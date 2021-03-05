@@ -22,3 +22,17 @@ SYN_RECV 942
 CLOSING 204
 LAST_ACK 4552
 ```
+
+# 2 ulimit
+ulimit是shell层对进程的限制。
+ulimit限制的是当前shell进程，及其派生的子进程。
+
+# 3 rlimit
+rlimit为程序中限制单进程的资源使用，结构如下：
+```c
+struct rlimit {
+    rlim_t rlim_cur;    //Soft limit
+    rlim_t rlim_max;    //Hard limit (ceiling for rlim_cur)
+};
+```
+setrlimit/getrlimit操作rlimit结构。
