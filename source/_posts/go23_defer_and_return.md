@@ -135,7 +135,9 @@ if the surrounding function returns through an explicit return statement, deferr
     //output: 1
 ```
 **返回值赋值：返回值没有命名，会将x赋值给匿名变量**。
+
 //x赋值到r0寄存器 -- 匿名返回值的赋值操作
 0x005b 00091 (/Users/mapleyin/test/t1.go:15)	MOVQ	"".x+16(SP), AX
 0x0060 00096 (/Users/mapleyin/test/t1.go:15)	MOVQ	AX, "".~r0+56(SP)
+
 汇编分析参考文章：http://404-notfound.cn/golang-return-defer/
