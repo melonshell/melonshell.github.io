@@ -579,11 +579,13 @@ go test -bench BenchmarkAdd -run XXX -mutexprofilefraction=1 -mutexprofile=mutex
 windows安装[graphviz](http://www.graphviz.org/)，将其bin目录添加至系统环境变量PATH；  
 内网服务监听标准Web端口(80/8080/8081/443)；  
 
-**方法1：** 在windows MinGW或CMD窗口执行命令：go tool pprof -http=:8080 http://localhost:8081/debug/pprof/profile，**备注**：go tool pprof -http=:8080 http://100.94.6.138:8081/debug/pprof/profile用外网IP(132.232.51.227)一直无法连接成功，猜测是go tool pprof需要设置代理，暂时后续分析原因！！！  
+**方法1：** 在windows MinGW或CMD窗口执行命令：go tool pprof -http=:8080 http://localhost:8081/debug/pprof/profile，**备注**：go tool pprof -http=:8080 http://100.94.6.138:8081/debug/pprof/profile用外网IP(132.232.51.227)由于开发网和IDC网络策略一直无法连接成功  
 
 默认取样时间为30s，可以通过-seconds指定采样时间：  
 go tool pprof -http=:8080 -seconds=300 http://100.94.6.138:8081/debug/pprof/profile  
-go tool pprof -http=:8080 http://100.94.6.138:8081/debug/pprof/profile?seconds=300  
+go tool pprof -http=:8080 http://100.94.6.138:8081/debug/pprof/profile?seconds=300
+对于trace分析可以直接执行：
+go tool trace trace.out
 
 **方法2：** 在linux服务器执行：go tool pprof http://localhost:8081/debug/pprof/profile，或者指定采样时间：go tool pprof -seconds=300 http://localhost:8081/debug/pprof/profile  
 ```
