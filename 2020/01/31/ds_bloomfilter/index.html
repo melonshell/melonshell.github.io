@@ -6,17 +6,18 @@
   <meta name="keywords" content=" bloom filter ">
   <meta name="description" content="海量数据处理之Bloom Filter | Hexo">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="description" content="1 文件删除原理linux是通过link的数量来控制文件删除的，只有当一个文件不存在任何link的时候，这个文件才会被删除。一般来说，每个文件都有2个link计数器:i_count和i_link。i_count: 当前文件使用者的数量；i_link: 硬链接的数量；当一个文件被某一个进程引用时，对应i_count数就会增加；当创建文件硬链接的时候，对应i_link数就会增加。 对于删除命令rm而言">
+<meta name="description" content="defer表达式必须是函数/方法调用。 1 deferred函数执行顺序如果有多个defer表达式，调用顺序类似于栈，越后面的defer表达式越先被调用，后进先出。deferred functions are invoked immediately before the surrounding function returns, in the reverse order they were def">
+<meta name="keywords" content="go,defer,函数return">
 <meta property="og:type" content="article">
-<meta property="og:title" content="linux文件删除原理">
-<meta property="og:url" content="http://melonshell.github.io/2021/03/05/base1/index.html">
+<meta property="og:title" content="defer深入">
+<meta property="og:url" content="http://melonshell.github.io/2021/02/11/go23_defer_and_return/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="1 文件删除原理linux是通过link的数量来控制文件删除的，只有当一个文件不存在任何link的时候，这个文件才会被删除。一般来说，每个文件都有2个link计数器:i_count和i_link。i_count: 当前文件使用者的数量；i_link: 硬链接的数量；当一个文件被某一个进程引用时，对应i_count数就会增加；当创建文件硬链接的时候，对应i_link数就会增加。 对于删除命令rm而言">
+<meta property="og:description" content="defer表达式必须是函数/方法调用。 1 deferred函数执行顺序如果有多个defer表达式，调用顺序类似于栈，越后面的defer表达式越先被调用，后进先出。deferred functions are invoked immediately before the surrounding function returns, in the reverse order they were def">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2021-03-17T06:17:10.533Z">
+<meta property="og:updated_time" content="2021-03-17T06:17:10.539Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="linux文件删除原理">
-<meta name="twitter:description" content="1 文件删除原理linux是通过link的数量来控制文件删除的，只有当一个文件不存在任何link的时候，这个文件才会被删除。一般来说，每个文件都有2个link计数器:i_count和i_link。i_count: 当前文件使用者的数量；i_link: 硬链接的数量；当一个文件被某一个进程引用时，对应i_count数就会增加；当创建文件硬链接的时候，对应i_link数就会增加。 对于删除命令rm而言">
+<meta name="twitter:title" content="defer深入">
+<meta name="twitter:description" content="defer表达式必须是函数/方法调用。 1 deferred函数执行顺序如果有多个defer表达式，调用顺序类似于栈，越后面的defer表达式越先被调用，后进先出。deferred functions are invoked immediately before the surrounding function returns, in the reverse order they were def">
 
 
 <link rel="icon" href="/img/avatar.jpg">
@@ -105,6 +106,22 @@
     
         
             
+            <li><div data-rel="基础知识">基础知识<small>(2)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="性能分析">性能分析<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
             <li><div data-rel="积累收集">积累收集<small>(5)</small></div>
                 
             </li>
@@ -114,14 +131,6 @@
         
             
             <li><div data-rel="C/C++">C/C++<small>(1)</small></div>
-                
-            </li>
-            
-        
-    
-        
-            
-            <li><div data-rel="基础知识">基础知识<small>(2)</small></div>
                 
             </li>
             
@@ -153,7 +162,7 @@
     
         
             
-            <li><div data-rel="性能分析">性能分析<small>(3)</small></div>
+            <li><div data-rel="问题解决">问题解决<small>(1)</small></div>
                 
             </li>
             
@@ -170,14 +179,6 @@
         
             
             <li><div data-rel="方法论">方法论<small>(5)</small></div>
-                
-            </li>
-            
-        
-    
-        
-            
-            <li><div data-rel="问题解决">问题解决<small>(1)</small></div>
                 
             </li>
             
@@ -209,10 +210,6 @@
     
         
             
-        
-    
-        
-            
             <li><div data-rel="levelDB">levelDB<small>(1)</small></div>
                 
             </li>
@@ -224,6 +221,10 @@
             <li><div data-rel="TCPIP系列">TCPIP系列<small>(1)</small></div>
                 
             </li>
+            
+        
+    
+        
             
         
     
@@ -268,7 +269,7 @@
     <div><a class="about  site_url"  href="/about">关于</a></div>
 </div>
 <input type="hidden" id="yelog_site_posts_number" value="75">
-<input type="hidden" id="yelog_site_word_count" value="89.7k">
+<input type="hidden" id="yelog_site_word_count" value="89.8k">
 <div style="display: none">
     <span id="busuanzi_value_site_uv"></span>
     <span id="busuanzi_value_site_pv"></span>
@@ -300,19 +301,35 @@
     <div class="tags-list">
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">cpu</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">分支预测</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">内存对齐</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">堆</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">堆排序</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">bloom filter</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color4">单链表</a>
     </li>
     
     <li class="article-tag-list-item">
         <a href="javascript:" class="color2">环</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">缓存淘汰算法</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">bloom filter</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -328,7 +345,7 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">go</a>
+        <a href="javascript:" class="color2">缓存淘汰算法</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -336,39 +353,15 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">非递归遍历</a>
-    </li>
-    
-    <li class="article-tag-list-item">
         <a href="javascript:" class="color2">查找第k大数</a>
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">go</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color3">channel</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">cpu</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">分支预测</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">C语言</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">多态</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">堆</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">堆排序</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -380,7 +373,19 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">赋值</a>
+        <a href="javascript:" class="color4">C语言</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多态</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">非递归遍历</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">方法集</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -388,7 +393,15 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">方法集</a>
+        <a href="javascript:" class="color3">赋值</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">数组</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">函数形参</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -404,35 +417,11 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">数组</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">函数形参</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">性能</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">工具</a>
+        <a href="javascript:" class="color1">error</a>
     </li>
     
     <li class="article-tag-list-item">
         <a href="javascript:" class="color4">nil</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">常用命令</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">redis</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">性能分析</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -444,6 +433,26 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">性能分析</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">性能</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">工具</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">常用命令</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color1">redis</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color5">docker compose</a>
     </li>
     
@@ -452,15 +461,15 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">安全</a>
-    </li>
-    
-    <li class="article-tag-list-item">
         <a href="javascript:" class="color4">pipeline</a>
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">error</a>
+        <a href="javascript:" class="color3">安全</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">hmac</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -484,6 +493,10 @@
     </li>
     
     <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">缓存经典问题</a>
+    </li>
+    
+    <li class="article-tag-list-item">
         <a href="javascript:" class="color3">微信</a>
     </li>
     
@@ -496,7 +509,15 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">hmac</a>
+        <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color4">多机房</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color3">多活</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -516,23 +537,7 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">读写分离、垂直拆分、水平拆分、分库分表</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">多机房</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color3">多活</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color1">gperftools</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">CPU profile</a>
+        <a href="javascript:" class="color4">长连接</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -540,7 +545,7 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">wireshark</a>
+        <a href="javascript:" class="color1">gperftools</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -549,6 +554,10 @@
     
     <li class="article-tag-list-item">
         <a href="javascript:" class="color3">heap profile</a>
+    </li>
+    
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color2">CPU profile</a>
     </li>
     
     <li class="article-tag-list-item">
@@ -568,19 +577,11 @@
     </li>
     
     <li class="article-tag-list-item">
-        <a href="javascript:" class="color2">缓存经典问题</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color4">长连接</a>
+        <a href="javascript:" class="color5">wireshark</a>
     </li>
     
     <li class="article-tag-list-item">
         <a href="javascript:" class="color5">perf</a>
-    </li>
-    
-    <li class="article-tag-list-item">
-        <a href="javascript:" class="color5">内存对齐</a>
     </li>
     
     <div class="clearfix"></div>
@@ -588,6 +589,22 @@
 
     
     <nav id="title-list-nav">
+        
+        <a  class="基础知识 "
+           href="/2021/03/05/base1/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="linux文件删除原理">linux文件删除原理</span>
+            <span class="post-date" title="2021-03-05 20:23:07">2021/03/05</span>
+        </a>
+        
+        <a  class="性能分析 "
+           href="/2019/10/10/CPU-branch-prediction/"
+           data-tag="cpu,分支预测"
+           data-author="" >
+            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
         
         <a  class="积累收集 "
            href="/2019/10/29/comm-article/"
@@ -605,12 +622,20 @@
             <span class="post-date" title="2020-01-03 19:07:13">2020/01/03</span>
         </a>
         
-        <a  class="基础知识 "
-           href="/2021/03/05/base1/"
+        <a  class="积累收集 "
+           href="/2019/10/17/comm-tool/"
            data-tag=""
            data-author="" >
-            <span class="post-title" title="linux文件删除原理">linux文件删除原理</span>
-            <span class="post-date" title="2021-03-05 20:23:07">2021/03/05</span>
+            <span class="post-title" title="常用工具">常用工具</span>
+            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+        </a>
+        
+        <a  class="积累收集 "
+           href="/2019/10/10/comm-url/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="常用链接">常用链接</span>
+            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
         </a>
         
         <a  class="积累收集 "
@@ -621,12 +646,12 @@
             <span class="post-date" title="2020-02-11 18:01:03">2020/02/11</span>
         </a>
         
-        <a  class="积累收集 "
-           href="/2019/10/17/comm-tool/"
-           data-tag=""
+        <a  class="基础知识 "
+           href="/2020/11/21/cpu_mem_align/"
+           data-tag="cpu,内存对齐"
            data-author="" >
-            <span class="post-title" title="常用工具">常用工具</span>
-            <span class="post-date" title="2019-10-17 09:50:19">2019/10/17</span>
+            <span class="post-title" title="内存对齐">内存对齐</span>
+            <span class="post-date" title="2020-11-21 16:34:23">2020/11/21</span>
         </a>
         
         <a  class="docker "
@@ -638,6 +663,22 @@
         </a>
         
         <a  class="数据结构与算法 "
+           href="/2020/01/19/ds_heap_sort/"
+           data-tag="堆,堆排序"
+           data-author="" >
+            <span class="post-title" title="堆和堆排序">堆和堆排序</span>
+            <span class="post-date" title="2020-01-19 18:58:57">2020/01/19</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
+           href="/2020/01/31/ds_bloomfilter/"
+           data-tag="bloom filter"
+           data-author="" >
+            <span class="post-title" title="海量数据处理之Bloom Filter">海量数据处理之Bloom Filter</span>
+            <span class="post-date" title="2020-01-31 18:11:25">2020/01/31</span>
+        </a>
+        
+        <a  class="数据结构与算法 "
            href="/2020/01/15/ds_link_list_circle/"
            data-tag="单链表,环"
            data-author="" >
@@ -645,12 +686,12 @@
             <span class="post-date" title="2020-01-15 08:18:04">2020/01/15</span>
         </a>
         
-        <a  class="积累收集 "
-           href="/2019/10/10/comm-url/"
-           data-tag=""
+        <a  class="数据结构与算法 "
+           href="/2020/01/18/ds_lower_upper_bound/"
+           data-tag="lower_bound,upper_bound,查找"
            data-author="" >
-            <span class="post-title" title="常用链接">常用链接</span>
-            <span class="post-date" title="2019-10-10 12:34:27">2019/10/10</span>
+            <span class="post-title" title="lower_bound和upper_bound算法">lower_bound和upper_bound算法</span>
+            <span class="post-date" title="2020-01-18 23:24:13">2020/01/18</span>
         </a>
         
         <a  class="数据结构与算法 "
@@ -662,51 +703,11 @@
         </a>
         
         <a  class="数据结构与算法 "
-           href="/2020/01/31/ds_bloomfilter/"
-           data-tag="bloom filter"
-           data-author="" >
-            <span class="post-title" title="海量数据处理之Bloom Filter">海量数据处理之Bloom Filter</span>
-            <span class="post-date" title="2020-01-31 18:11:25">2020/01/31</span>
-        </a>
-        
-        <a  class="积累收集 "
-           href="/2020/09/27/git/"
-           data-tag=""
-           data-author="" >
-            <span class="post-title" title="git常用命令">git常用命令</span>
-            <span class="post-date" title="2020-09-27 15:06:23">2020/09/27</span>
-        </a>
-        
-        <a  class="数据结构与算法 "
-           href="/2020/01/18/ds_lower_upper_bound/"
-           data-tag="lower_bound,upper_bound,查找"
-           data-author="" >
-            <span class="post-title" title="lower_bound和upper_bound算法">lower_bound和upper_bound算法</span>
-            <span class="post-date" title="2020-01-18 23:24:13">2020/01/18</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2019/09/16/go1/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go环境搭建">go环境搭建</span>
-            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
-        </a>
-        
-        <a  class="数据结构与算法 "
            href="/2019/12/25/ds_rotated_array_search/"
            data-tag="查找,旋转数组"
            data-author="" >
             <span class="post-title" title="旋转数组查找">旋转数组查找</span>
             <span class="post-date" title="2019-12-25 16:11:03">2019/12/25</span>
-        </a>
-        
-        <a  class="数据结构与算法 "
-           href="/2020/01/29/ds_traverse_tree/"
-           data-tag="非递归遍历"
-           data-author="" >
-            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
-            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
         </a>
         
         <a  class="数据结构与算法 "
@@ -717,20 +718,12 @@
             <span class="post-date" title="2020-01-20 12:56:43">2020/01/20</span>
         </a>
         
-        <a  class="go语言 "
-           href="/2019/12/07/go10_channel/"
-           data-tag="go,channel"
+        <a  class="积累收集 "
+           href="/2020/09/27/git/"
+           data-tag=""
            data-author="" >
-            <span class="post-title" title="go语言之channel">go语言之channel</span>
-            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
-        </a>
-        
-        <a  class="性能分析 "
-           href="/2019/10/10/CPU-branch-prediction/"
-           data-tag="cpu,分支预测"
-           data-author="" >
-            <span class="post-title" title="CPU分支预测">CPU分支预测</span>
-            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+            <span class="post-title" title="git常用命令">git常用命令</span>
+            <span class="post-date" title="2020-09-27 15:06:23">2020/09/27</span>
         </a>
         
         <a  class="go语言 "
@@ -739,6 +732,38 @@
            data-author="" >
             <span class="post-title" title="go基本概念">go基本概念</span>
             <span class="post-date" title="2020-05-28 00:12:34">2020/05/28</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/09/16/go1/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go环境搭建">go环境搭建</span>
+            <span class="post-date" title="2019-09-16 23:52:09">2019/09/16</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2019/12/07/go10_channel/"
+           data-tag="go,channel"
+           data-author="" >
+            <span class="post-title" title="go语言之channel">go语言之channel</span>
+            <span class="post-date" title="2019-12-07 15:34:04">2019/12/07</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2020/03/27/go11_3dot/"
+           data-tag="go,三个点"
+           data-author="" >
+            <span class="post-title" title="go语言之三个点用法">go语言之三个点用法</span>
+            <span class="post-date" title="2020-03-27 15:42:15">2020/03/27</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2020/05/04/go13_sync.Once/"
+           data-tag="go,sync.Once"
+           data-author="" >
+            <span class="post-title" title="go语言之sync.Once">go语言之sync.Once</span>
+            <span class="post-date" title="2020-05-04 19:52:54">2020/05/04</span>
         </a>
         
         <a  class="go语言 "
@@ -765,22 +790,6 @@
             <span class="post-date" title="2020-07-01 19:48:32">2020/07/01</span>
         </a>
         
-        <a  class="数据结构与算法 "
-           href="/2020/01/19/ds_heap_sort/"
-           data-tag="堆,堆排序"
-           data-author="" >
-            <span class="post-title" title="堆和堆排序">堆和堆排序</span>
-            <span class="post-date" title="2020-01-19 18:58:57">2020/01/19</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2020/03/27/go11_3dot/"
-           data-tag="go,三个点"
-           data-author="" >
-            <span class="post-title" title="go语言之三个点用法">go语言之三个点用法</span>
-            <span class="post-date" title="2020-03-27 15:42:15">2020/03/27</span>
-        </a>
-        
         <a  class="go语言 "
            href="/2020/06/19/go15_mod_cmd/"
            data-tag="go"
@@ -790,35 +799,19 @@
         </a>
         
         <a  class="go语言 "
-           href="/2020/05/04/go13_sync.Once/"
-           data-tag="go,sync.Once"
+           href="/2020/10/04/go17_var_alloc/"
+           data-tag="go"
            data-author="" >
-            <span class="post-title" title="go语言之sync.Once">go语言之sync.Once</span>
-            <span class="post-date" title="2020-05-04 19:52:54">2020/05/04</span>
+            <span class="post-title" title="go变量分配">go变量分配</span>
+            <span class="post-date" title="2020-10-04 11:31:07">2020/10/04</span>
         </a>
         
-        <a  class="go语言 "
-           href="/2021/02/09/go21_interface_assign/"
-           data-tag="go,赋值,接口"
+        <a  class="数据结构与算法 "
+           href="/2020/01/29/ds_traverse_tree/"
+           data-tag="非递归遍历"
            data-author="" >
-            <span class="post-title" title="go接口赋值">go接口赋值</span>
-            <span class="post-date" title="2021-02-09 14:35:11">2021/02/09</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2021/02/08/go20_method_sets/"
-           data-tag="go,接口,方法集"
-           data-author="" >
-            <span class="post-title" title="go方法集">go方法集</span>
-            <span class="post-date" title="2021-02-08 00:35:11">2021/02/08</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2021/02/11/go23_defer_and_return/"
-           data-tag="go,defer,函数return"
-           data-author="" >
-            <span class="post-title" title="defer深入">defer深入</span>
-            <span class="post-date" title="2021-02-11 11:02:43">2021/02/11</span>
+            <span class="post-title" title="非递归遍历二叉树">非递归遍历二叉树</span>
+            <span class="post-date" title="2020-01-29 16:37:23">2020/01/29</span>
         </a>
         
         <a  class="go语言 "
@@ -830,11 +823,35 @@
         </a>
         
         <a  class="go语言 "
-           href="/2019/09/25/go3_pprof/"
+           href="/2020/11/15/go19_for_range/"
            data-tag="go"
            data-author="" >
-            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
-            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+            <span class="post-title" title="go for range遍历">go for range遍历</span>
+            <span class="post-date" title="2020-11-15 10:40:11">2020/11/15</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2021/02/08/go20_method_sets/"
+           data-tag="go,方法集,接口"
+           data-author="" >
+            <span class="post-title" title="go方法集">go方法集</span>
+            <span class="post-date" title="2021-02-08 00:35:11">2021/02/08</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2021/02/09/go21_interface_assign/"
+           data-tag="go,接口,赋值"
+           data-author="" >
+            <span class="post-title" title="go接口赋值">go接口赋值</span>
+            <span class="post-date" title="2021-02-09 14:35:11">2021/02/09</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2021/02/10/go22_array_as_func_param/"
+           data-tag="go,数组,函数形参"
+           data-author="" >
+            <span class="post-title" title="go数组作为函数形参">go数组作为函数形参</span>
+            <span class="post-date" title="2021-02-10 21:02:43">2021/02/10</span>
         </a>
         
         <a  class="go语言 "
@@ -846,27 +863,27 @@
         </a>
         
         <a  class="go语言 "
+           href="/2019/09/25/go3_pprof/"
+           data-tag="go"
+           data-author="" >
+            <span class="post-title" title="go pprof性能分析">go pprof性能分析</span>
+            <span class="post-date" title="2019-09-25 16:41:07">2019/09/25</span>
+        </a>
+        
+        <a  class="go语言 "
+           href="/2021/02/11/go23_defer_and_return/"
+           data-tag="go,defer,函数return"
+           data-author="" >
+            <span class="post-title" title="defer深入">defer深入</span>
+            <span class="post-date" title="2021-02-11 11:02:43">2021/02/11</span>
+        </a>
+        
+        <a  class="go语言 "
            href="/2019/10/03/go4/"
            data-tag="go"
            data-author="" >
             <span class="post-title" title="go tool cgo入门">go tool cgo入门</span>
             <span class="post-date" title="2019-10-03 09:30:07">2019/10/03</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2020/10/04/go17_var_alloc/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go变量分配">go变量分配</span>
-            <span class="post-date" title="2020-10-04 11:31:07">2020/10/04</span>
-        </a>
-        
-        <a  class="go语言 "
-           href="/2020/11/15/go19_for_range/"
-           data-tag="go"
-           data-author="" >
-            <span class="post-title" title="go for range遍历">go for range遍历</span>
-            <span class="post-date" title="2020-11-15 10:40:11">2020/11/15</span>
         </a>
         
         <a  class="go语言 "
@@ -878,19 +895,11 @@
         </a>
         
         <a  class="go语言 "
-           href="/2021/02/10/go22_array_as_func_param/"
-           data-tag="go,数组,函数形参"
+           href="/2019/11/09/go7_error/"
+           data-tag="go,error"
            data-author="" >
-            <span class="post-title" title="go数组作为函数形参">go数组作为函数形参</span>
-            <span class="post-date" title="2021-02-10 21:02:43">2021/02/10</span>
-        </a>
-        
-        <a  class="性能分析 "
-           href="/2019/10/10/prob_analysis_tool/"
-           data-tag="性能,工具"
-           data-author="" >
-            <span class="post-title" title="watch和dmesg">watch和dmesg</span>
-            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
+            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
         </a>
         
         <a  class="go语言 "
@@ -899,22 +908,6 @@
            data-author="" >
             <span class="post-title" title="go之nil">go之nil</span>
             <span class="post-date" title="2019-10-13 21:43:24">2019/10/13</span>
-        </a>
-        
-        <a  class="Redis "
-           href="/2020/02/05/redis0_cmd/"
-           data-tag="常用命令,redis"
-           data-author="" >
-            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
-            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
-        </a>
-        
-        <a  class="性能分析 "
-           href="/2019/10/10/prob_analysis_tool2/"
-           data-tag="性能分析"
-           data-author="" >
-            <span class="post-title" title="性能分析命令">性能分析命令</span>
-            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
         </a>
         
         <a  class="go语言 "
@@ -933,30 +926,6 @@
             <span class="post-date" title="2019-12-05 16:45:42">2019/12/05</span>
         </a>
         
-        <a  class="Redis "
-           href="/2019/12/29/redis1_build_cluster/"
-           data-tag="redis,docker compose,集群搭建"
-           data-author="" >
-            <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
-            <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
-        </a>
-        
-        <a  class="方法论 "
-           href="/2020/10/18/se0/"
-           data-tag=""
-           data-author="" >
-            <span class="post-title" title="海量之道">海量之道</span>
-            <span class="post-date" title="2020-10-18 10:04:13">2020/10/18</span>
-        </a>
-        
-        <a  class="方法论 "
-           href="/2020/10/18/se1/"
-           data-tag=""
-           data-author="" >
-            <span class="post-title" title="高性能">高性能</span>
-            <span class="post-date" title="2020-10-18 10:38:44">2020/10/18</span>
-        </a>
-        
         <a  class="问题解决 "
            href="/2020/11/01/problem0/"
            data-tag=""
@@ -965,12 +934,44 @@
             <span class="post-date" title="2020-11-01 10:24:41">2020/11/01</span>
         </a>
         
-        <a  class="方法论 "
-           href="/2020/10/18/se3/"
-           data-tag=""
+        <a  class="性能分析 "
+           href="/2019/10/10/prob_analysis_tool2/"
+           data-tag="性能分析"
            data-author="" >
-            <span class="post-title" title="问题分析常用命令">问题分析常用命令</span>
-            <span class="post-date" title="2020-10-18 10:38:44">2020/10/18</span>
+            <span class="post-title" title="性能分析命令">性能分析命令</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
+        
+        <a  class="性能分析 "
+           href="/2019/10/10/prob_analysis_tool/"
+           data-tag="性能,工具"
+           data-author="" >
+            <span class="post-title" title="watch和dmesg">watch和dmesg</span>
+            <span class="post-date" title="2019-10-10 23:40:47">2019/10/10</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/02/05/redis0_cmd/"
+           data-tag="常用命令,redis"
+           data-author="" >
+            <span class="post-title" title="Redis常用命令">Redis常用命令</span>
+            <span class="post-date" title="2020-02-05 18:50:13">2020/02/05</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2019/12/29/redis1_build_cluster/"
+           data-tag="redis,docker compose,集群搭建"
+           data-author="" >
+            <span class="post-title" title="Redis集群搭建">Redis集群搭建</span>
+            <span class="post-date" title="2019-12-29 10:37:03">2019/12/29</span>
+        </a>
+        
+        <a  class="Redis "
+           href="/2020/06/07/redis1_pipeline/"
+           data-tag="pipeline"
+           data-author="" >
+            <span class="post-title" title="pipeline">pipeline</span>
+            <span class="post-date" title="2020-06-07 22:46:04">2020/06/07</span>
         </a>
         
         <a  class="方法论 "
@@ -982,10 +983,26 @@
         </a>
         
         <a  class="方法论 "
+           href="/2020/10/18/se0/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="海量之道">海量之道</span>
+            <span class="post-date" title="2020-10-18 10:04:13">2020/10/18</span>
+        </a>
+        
+        <a  class="方法论 "
            href="/2020/10/18/se2/"
            data-tag=""
            data-author="" >
             <span class="post-title" title="自我提升">自我提升</span>
+            <span class="post-date" title="2020-10-18 10:38:44">2020/10/18</span>
+        </a>
+        
+        <a  class="方法论 "
+           href="/2020/10/18/se1/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="高性能">高性能</span>
             <span class="post-date" title="2020-10-18 10:38:44">2020/10/18</span>
         </a>
         
@@ -997,14 +1014,6 @@
             <span class="post-date" title="2020-07-19 18:34:17">2020/07/19</span>
         </a>
         
-        <a  class="Redis "
-           href="/2020/06/07/redis1_pipeline/"
-           data-tag="pipeline"
-           data-author="" >
-            <span class="post-title" title="pipeline">pipeline</span>
-            <span class="post-date" title="2020-06-07 22:46:04">2020/06/07</span>
-        </a>
-        
         <a  class="内存池 "
            href="/2020/12/28/se5_mem_pool/"
            data-tag=""
@@ -1013,12 +1022,20 @@
             <span class="post-date" title="2020-12-28 12:55:32">2020/12/28</span>
         </a>
         
-        <a  class="go语言 "
-           href="/2019/11/09/go7_error/"
-           data-tag="go,error"
+        <a  class="安全 加密 "
+           href="/2020/07/19/security_hmac/"
+           data-tag="安全,hmac"
            data-author="" >
-            <span class="post-title" title="go语言之Error处理推荐方案">go语言之Error处理推荐方案</span>
-            <span class="post-date" title="2019-11-09 09:04:12">2019/11/09</span>
+            <span class="post-title" title="hmac算法">hmac算法</span>
+            <span class="post-date" title="2020-07-19 17:03:20">2020/07/19</span>
+        </a>
+        
+        <a  class="方法论 "
+           href="/2020/10/18/se3/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="问题分析常用命令">问题分析常用命令</span>
+            <span class="post-date" title="2020-10-18 10:38:44">2020/10/18</span>
         </a>
         
         <a  class="levelDB "
@@ -1038,6 +1055,14 @@
         </a>
         
         <a  class="技术文章阅读 "
+           href="/2020/02/05/tech11_cache1/"
+           data-tag="缓存经典问题"
+           data-author="" >
+            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
+            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
            href="/2020/01/23/tech2_wx_red_packet/"
            data-tag="微信,红包"
            data-author="" >
@@ -1053,12 +1078,20 @@
             <span class="post-date" title="2020-02-02 10:13:14">2020/02/02</span>
         </a>
         
-        <a  class="安全 加密 "
-           href="/2020/07/19/security_hmac/"
-           data-tag="安全,hmac"
+        <a  class="技术文章阅读 "
+           href="/2020/01/22/tech1_db_split/"
+           data-tag="读写分离、垂直拆分、水平拆分、分库分表"
            data-author="" >
-            <span class="post-title" title="hmac算法">hmac算法</span>
-            <span class="post-date" title="2020-07-19 17:03:20">2020/07/19</span>
+            <span class="post-title" title="读写分离、垂直拆分、水平拆分、分库分表">读写分离、垂直拆分、水平拆分、分库分表</span>
+            <span class="post-date" title="2020-01-22 17:03:33">2020/01/22</span>
+        </a>
+        
+        <a  class="技术文章阅读 "
+           href="/2020/01/24/tech3_multi_room_living/"
+           data-tag="多机房,多活"
+           data-author="" >
+            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
+            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
         </a>
         
         <a  class="技术文章阅读 "
@@ -1086,19 +1119,27 @@
         </a>
         
         <a  class="技术文章阅读 "
-           href="/2020/01/22/tech1_db_split/"
-           data-tag="读写分离、垂直拆分、水平拆分、分库分表"
+           href="/2020/01/30/tech9_58pc/"
+           data-tag="长连接"
            data-author="" >
-            <span class="post-title" title="读写分离、垂直拆分、水平拆分、分库分表">读写分离、垂直拆分、水平拆分、分库分表</span>
-            <span class="post-date" title="2020-01-22 17:03:33">2020/01/22</span>
+            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
+            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
         </a>
         
         <a  class="技术文章阅读 "
-           href="/2020/01/24/tech3_multi_room_living/"
-           data-tag="多机房,多活"
+           href="/2020/01/27/tech6_lb_ha1/"
+           data-tag="负载均衡,高可用"
            data-author="" >
-            <span class="post-title" title="多机房多活架构">多机房多活架构</span>
-            <span class="post-date" title="2020-01-24 10:47:24">2020/01/24</span>
+            <span class="post-title" title="负载均衡和高可用介绍">负载均衡和高可用介绍</span>
+            <span class="post-date" title="2020-01-27 23:25:02">2020/01/27</span>
+        </a>
+        
+        <a  class="工具 性能 "
+           href="/2019/09/14/tool3_gperftools2/"
+           data-tag="gperftools,内存,heap profile"
+           data-author="" >
+            <span class="post-title" title="gperftools之heap profile">gperftools之heap profile</span>
+            <span class="post-date" title="2019-09-14 23:36:27">2019/09/14</span>
         </a>
         
         <a  class="工具 性能 "
@@ -1110,27 +1151,11 @@
         </a>
         
         <a  class="技术文章阅读 "
-           href="/2020/01/27/tech6_lb_ha1/"
-           data-tag="负载均衡,高可用"
+           href="/2020/01/29/tech8_ha/"
+           data-tag="高可用"
            data-author="" >
-            <span class="post-title" title="负载均衡和高可用介绍">负载均衡和高可用介绍</span>
-            <span class="post-date" title="2020-01-27 23:25:02">2020/01/27</span>
-        </a>
-        
-        <a  class="工具 "
-           href="/2021/01/15/tool5_wireshark1/"
-           data-tag="wireshark"
-           data-author="" >
-            <span class="post-title" title="wireshark使用">wireshark使用</span>
-            <span class="post-date" title="2021-01-15 15:33:15">2021/01/15</span>
-        </a>
-        
-        <a  class="工具 性能 "
-           href="/2019/09/14/tool3_gperftools2/"
-           data-tag="gperftools,内存,heap profile"
-           data-author="" >
-            <span class="post-title" title="gperftools之heap profile">gperftools之heap profile</span>
-            <span class="post-date" title="2019-09-14 23:36:27">2019/09/14</span>
+            <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
+            <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
         </a>
         
         <a  class="工具 "
@@ -1149,28 +1174,12 @@
             <span class="post-date" title="2019-10-30 08:02:03">2019/10/30</span>
         </a>
         
-        <a  class="技术文章阅读 "
-           href="/2020/01/29/tech8_ha/"
-           data-tag="高可用"
+        <a  class="工具 "
+           href="/2021/01/15/tool5_wireshark1/"
+           data-tag="wireshark"
            data-author="" >
-            <span class="post-title" title="互联网架构高可用">互联网架构高可用</span>
-            <span class="post-date" title="2020-01-29 09:32:04">2020/01/29</span>
-        </a>
-        
-        <a  class="技术文章阅读 "
-           href="/2020/02/05/tech11_cache1/"
-           data-tag="缓存经典问题"
-           data-author="" >
-            <span class="post-title" title="缓存经典问题">缓存经典问题</span>
-            <span class="post-date" title="2020-02-05 14:13:11">2020/02/05</span>
-        </a>
-        
-        <a  class="技术文章阅读 "
-           href="/2020/01/30/tech9_58pc/"
-           data-tag="长连接"
-           data-author="" >
-            <span class="post-title" title="58集团面向亿级用户IM长连接服务设计与实践">58集团面向亿级用户IM长连接服务设计与实践</span>
-            <span class="post-date" title="2020-01-30 12:11:17">2020/01/30</span>
+            <span class="post-title" title="wireshark使用">wireshark使用</span>
+            <span class="post-date" title="2021-01-15 15:33:15">2021/01/15</span>
         </a>
         
         <a  class="工具 性能 "
@@ -1179,14 +1188,6 @@
            data-author="" >
             <span class="post-title" title="perf性能分析">perf性能分析</span>
             <span class="post-date" title="2019-10-09 07:54:19">2019/10/09</span>
-        </a>
-        
-        <a  class="基础知识 "
-           href="/2020/11/21/cpu_mem_align/"
-           data-tag="cpu,内存对齐"
-           data-author="" >
-            <span class="post-title" title="内存对齐">内存对齐</span>
-            <span class="post-date" title="2020-11-21 16:34:23">2020/11/21</span>
         </a>
         
     </nav>
@@ -1434,7 +1435,7 @@
     /*作者、标签的自动补全*/
     $(function () {
         $('.search').AutoComplete({
-            'data': ['#单链表','#环','#缓存淘汰算法','#bloom filter','#lower_bound','#upper_bound','#查找','#go','#旋转数组','#非递归遍历','#查找第k大数','#channel','#cpu','#分支预测','#C语言','#多态','#堆','#堆排序','#三个点','#sync.Once','#赋值','#接口','#方法集','#defer','#函数return','#gdb','#数组','#函数形参','#性能','#工具','#nil','#常用命令','#redis','#性能分析','#接收者','#select','#docker compose','#集群搭建','#安全','#pipeline','#error','#levelDB','#源码阅读','#TCP/IP','#TCP_NODELAY','#延迟ACK','#微信','#红包','#负载均衡','#hmac','#RPC','#单点','#可用性','#线程数','#读写分离、垂直拆分、水平拆分、分库分表','#多机房','#多活','#gperftools','#CPU profile','#高可用','#wireshark','#内存','#heap profile','#dmesg','#sar','#CPU','#IO','#缓存经典问题','#长连接','#perf','#内存对齐',],
+            'data': ['#cpu','#分支预测','#内存对齐','#堆','#堆排序','#bloom filter','#单链表','#环','#lower_bound','#upper_bound','#查找','#缓存淘汰算法','#旋转数组','#查找第k大数','#go','#channel','#三个点','#sync.Once','#C语言','#多态','#非递归遍历','#方法集','#接口','#赋值','#数组','#函数形参','#defer','#函数return','#gdb','#error','#nil','#接收者','#select','#性能分析','#性能','#工具','#常用命令','#redis','#docker compose','#集群搭建','#pipeline','#安全','#hmac','#levelDB','#源码阅读','#TCP/IP','#TCP_NODELAY','#延迟ACK','#缓存经典问题','#微信','#红包','#负载均衡','#读写分离、垂直拆分、水平拆分、分库分表','#多机房','#多活','#RPC','#单点','#可用性','#线程数','#长连接','#高可用','#gperftools','#内存','#heap profile','#CPU profile','#dmesg','#sar','#CPU','#IO','#wireshark','#perf',],
             'itemHeight': 20,
             'width': 418
         }).AutoComplete('show');
