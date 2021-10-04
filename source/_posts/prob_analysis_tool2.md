@@ -36,3 +36,6 @@ struct rlimit {
 };
 ```
 setrlimit/getrlimit操作rlimit结构。
+
+# 4 查看进程占用的句柄数
+lsof -n | awk '{print $2}' | sort | uniq -c | sort -nr | more
